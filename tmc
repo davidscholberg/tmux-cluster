@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# Add cluster hosts to global $HOSTS
+# param 1 should be cluster name
+add_cluster_hosts() {
+	local CLUSTER="$1"
+
+	# check for cluster in config
+	local CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER")"
+	if [ -z "$CLUSTER_LINE" ]; then
+		HOSTS="$HOSTS $CLUSTER"
+	else
+		SEEN_CLUSTERS="$SEEN_CLUSTERS $CLUSTER"
+
+		# get hosts from cluster line
+		local CLUSTER_LINE_HOSTS="$(echo "$CLUSTER_LINE" | cut -f 2- -d ' ')"
+
+		for HOST in $CLUSTER_LINE_HOSTS; do
+			if [ -z "$(echo "$HOSTS" | grep "$HOST")" -a -z "$(echo "$SEEN_CLUSTERS" | grep "$HOST")" ]; then
+				add_cluster_hosts "$HOST"
+			fi
+		done
+	fi
+
+}
+
+if [ -z "$1" ]; then
+	echo "usage: $0 <clustername>" 1>&2
+	exit 1
+fi
+
+CLUSTER="$1"
+CONF="$HOME/.clusterssh/clusters"
+
+CONF_LINES="$(grep -Ev '(#|^$)' "$CONF")"
+
+# check for cluster in config
+CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER")"
+if [ -z "$CLUSTER_LINE" ]; then
+	echo "cluster $CLUSTER not in config $CONF" 1>&2
+	exit 2
+fi
+
+# get hosts from cluster line
+HOSTS=""
+SEEN_CLUSTERS=""
+add_cluster_hosts $CLUSTER
+
+for HOST in $HOSTS
+do
+   tmux splitw "ssh $HOST"
+   tmux select-layout tiled
+done
+
+tmux set-window-option synchronize-panes on
