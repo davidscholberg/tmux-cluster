@@ -41,15 +41,39 @@ if [ -z "$CLUSTER_LINE" ]; then
 	exit 2
 fi
 
+# check for existing tmux session of the specified cluster
+if [ -n "$(tmux ls | grep "$CLUSTER-cluster")" ]; then
+	echo "tmux session $CLUSTER-cluster already exists" 1>&2
+	exit 3
+fi
+
 # get hosts from cluster line
 HOSTS=""
 SEEN_CLUSTERS=""
 add_cluster_hosts $CLUSTER
 
+# remove leading space
+HOSTS="$(echo "$HOSTS" | sed 's/^ //')"
+
+# build tmux commands
+# get first host
+HOST="$(echo "$HOSTS" | awk '{print $1}')"
+# remove first host
+HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
+
+TMUX_COMMANDS="new -s \"$CLUSTER-cluster\" \"ssh $HOST\"\n"
+
 for HOST in $HOSTS
 do
-   tmux splitw "ssh $HOST"
-   tmux select-layout tiled
+	TMUX_COMMANDS="${TMUX_COMMANDS}splitw \"ssh $HOST\"\n"
+	TMUX_COMMANDS="${TMUX_COMMANDS}select-layout tiled\n"
 done
 
-tmux set-window-option synchronize-panes on
+TMUX_COMMANDS="${TMUX_COMMANDS}set-window-option synchronize-panes on\n"
+TMUX_COMMANDS="${TMUX_COMMANDS}at -t \"$CLUSTER-cluster\"\n"
+
+TMPFILE="$(mktemp /tmp/tmux-cluster-XXXXXXXXXXXX)"
+
+echo "$TMUX_COMMANDS" > "$TMPFILE"
+tmux source-file "$TMPFILE"
+rm "$TMPFILE"
