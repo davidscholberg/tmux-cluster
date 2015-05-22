@@ -19,7 +19,7 @@ add_cluster_hosts() {
 	local CLUSTER="$1"
 
 	# check for cluster in config
-	local CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER")"
+	local CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
 	if [ -z "$CLUSTER_LINE" ]; then
 		HOSTS="$HOSTS $CLUSTER"
 	else
@@ -29,7 +29,7 @@ add_cluster_hosts() {
 		local CLUSTER_LINE_HOSTS="$(echo "$CLUSTER_LINE" | cut -f 2- -d ' ')"
 
 		for HOST in $CLUSTER_LINE_HOSTS; do
-			if [ -z "$(echo "$HOSTS" | grep "$HOST")" -a -z "$(echo "$SEEN_CLUSTERS" | grep "$HOST")" ]; then
+			if [ -z "$(echo "$HOSTS" | grep -E " $HOST( |$)")" -a -z "$(echo "$SEEN_CLUSTERS" | grep -E " $HOST( |$)")" ]; then
 				add_cluster_hosts "$HOST"
 			fi
 		done
@@ -48,15 +48,15 @@ CONF="$HOME/.clusterssh/clusters"
 CONF_LINES="$(grep -Ev '(#|^$)' "$CONF")"
 
 # check for cluster in config
-CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER")"
+CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
 if [ -z "$CLUSTER_LINE" ]; then
 	echo "cluster $CLUSTER not in config $CONF" 1>&2
 	exit 2
 fi
 
 # check for existing tmux session of the specified cluster
-if [ -n "$(tmux ls | grep "$CLUSTER-cluster")" ]; then
-	echo "tmux session $CLUSTER-cluster already exists" 1>&2
+if [ -n "$(tmux ls | grep "cluster-$CLUSTER:")" ]; then
+	echo "tmux session cluster-$CLUSTER already exists" 1>&2
 	exit 3
 fi
 
@@ -74,7 +74,7 @@ HOST="$(echo "$HOSTS" | awk '{print $1}')"
 # remove first host
 HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
 
-TMUX_COMMANDS="new -s \"$CLUSTER-cluster\" \"ssh $HOST\"\n"
+TMUX_COMMANDS="new -s \"cluster-$CLUSTER\" \"ssh $HOST\"\n"
 
 for HOST in $HOSTS
 do
@@ -83,7 +83,6 @@ do
 done
 
 TMUX_COMMANDS="${TMUX_COMMANDS}set-window-option synchronize-panes on\n"
-TMUX_COMMANDS="${TMUX_COMMANDS}at -t \"$CLUSTER-cluster\"\n"
 
 TMPFILE="$(mktemp /tmp/tmux-cluster-XXXXXXXXXXXX)"
 
