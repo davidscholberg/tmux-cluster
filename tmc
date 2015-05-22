@@ -37,27 +37,41 @@ add_cluster_hosts() {
 
 }
 
-if [ -z "$1" ]; then
-	echo "usage: $0 <clustername>" 1>&2
+# check if tmux is in PATH
+if [ -z "$(which tmux)" ]; then
+	echo "error: tmux not found in path: $PATH" 1>&2
 	exit 1
 fi
 
-CLUSTER="$1"
 CONF="$HOME/.clusterssh/clusters"
+
+# check for conf file
+if [ ! -f "$CONF" ]; then
+	echo "error: config $CONF not found" 1>&2
+	exit 2
+fi
+
+# check for first param
+if [ -z "$1" ]; then
+	echo "usage: $0 <clustername>" 1>&2
+	exit 3
+fi
+
+CLUSTER="$1"
 
 CONF_LINES="$(grep -Ev '(#|^$)' "$CONF")"
 
 # check for cluster in config
 CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
 if [ -z "$CLUSTER_LINE" ]; then
-	echo "cluster $CLUSTER not in config $CONF" 1>&2
-	exit 2
+	echo "error: cluster $CLUSTER not in config $CONF" 1>&2
+	exit 4
 fi
 
 # check for existing tmux session of the specified cluster
 if [ -n "$(tmux ls | grep "cluster-$CLUSTER:")" ]; then
-	echo "tmux session cluster-$CLUSTER already exists" 1>&2
-	exit 3
+	echo "error: tmux session cluster-$CLUSTER already exists" 1>&2
+	exit 5
 fi
 
 # get hosts from cluster line
