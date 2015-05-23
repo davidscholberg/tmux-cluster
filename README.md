@@ -6,11 +6,24 @@ tmux-cluster is written in pure shell and only depends on tmux and standard unix
 
 #### Usage
 
-`tmc <clustername>`
+```
+Usage: tmc [OPTIONS] [CLUSTERNAME]
+
+Options:
+    -h              Display help message and quit
+    -d              Dump space-separated list of hosts in CLUSTERNAME
+    -c CLUSTERLINE  Create custom cluster
+                        CLUSTERLINE is treated as a clusters config line.
+                        This option conflicts with passing CLUSTERNAME.
+                        The name used for the cluster must not exist in the
+                            clusters config.
+```
 
 tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh/clusters`.
 
-A new session will be created with the name `cluster-<clustername>`. All of the hosts specified by `<clustername>` will be in a single window with a tiled layout, and the panes will be synchronized.
+A new session will be created with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized.
+
+Note that if the -c option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` used is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line.
 
 It is best to run tmux-cluster outside of an attached tmux session, otherwise you'll end up with a nested tmux instance.
 
@@ -35,8 +48,5 @@ tmux-cluster should perform much faster than most of the clusterssh tmux wrapper
 #### TODO
 
 * Add ability to specify multiple clusters on command line, each one creating a different session.
-* Add command line option to specify a custom list of hosts to use as a cluster.
-* Add command line option to dump host list of a given cluster to stdout.
-* Add command line option for help/usage
 * Add command line option to specify path to config.
 * Make tmux-cluster match clusterssh's behavior of using the "default" cluster if no cluster is specified.
