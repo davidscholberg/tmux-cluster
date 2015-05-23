@@ -18,7 +18,7 @@ It is best to run tmux-cluster outside of an attached tmux session, otherwise yo
 
 Question: Why does tmux-cluster exist? There are boatloads of clusterssh tmux wrappers out there already.
 
-Answer: [Configuration](#Configuration) and [performance](#Performance).
+Answer: [Configuration](#configuration) and [performance](#performance).
 
 ##### Configuration
 
