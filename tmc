@@ -15,6 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# define newline var
+NL='
+'
+
+usage() {
+	cat << EOF
+Usage: $(basename "$0") [OPTIONS] [CLUSTERNAME]
+
+Options:
+    -h              Display help message and quit
+    -d              Dump space-separated list of hosts in CLUSTERNAME
+    -c CLUSTERLINE  Create custom cluster
+                        CLUSTERLINE is treated as a clusters config line.
+                        This option conflicts with passing CLUSTERNAME.
+                        The name used for the cluster must not exist in the
+                            clusters config.
+EOF
+}
+
 # Add cluster hosts to global $HOSTS
 # param 1 should be cluster name
 add_cluster_hosts() {
@@ -53,27 +72,80 @@ if [ ! -f "$CONF" ]; then
 	exit 2
 fi
 
-# check for first param
-if [ -z "$1" ]; then
-	echo "usage: $0 <clustername>" 1>&2
-	exit 3
-fi
+DUMP_HOSTS=""
+CUSTOM_CLUSTER_LINE=""
 
-CLUSTER="$1"
+# parse args
+while getopts :hdc: OPT; do
+	case $OPT in
+		h)
+			usage
+			exit
+			;;
+		d)
+			DUMP_HOSTS="true"
+			;;
+		c)
+			CUSTOM_CLUSTER_LINE="$OPTARG"
+			;;
+		\?)
+			echo "error: invalid option -$OPTARG" 1>&2
+			usage 1>&2
+			exit 3
+			;;
+		:)
+			echo "error: missing argument for option -$OPTARG" 1>&2
+			usage 1>&2
+			exit 3
+			;;
+	esac
+done
+
+shift $((OPTIND-1))
 
 CONF_LINES="$(grep -Ev '(#|^$)' "$CONF")"
+
+if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
+	# check for first param
+	if [ -n "$1" ]; then
+		echo "error: passing CLUSTERNAME conflicts with -c option"
+		usage 1>&2
+		exit 3
+	fi
+
+	# get cluster name
+	CLUSTER="$(echo "$CUSTOM_CLUSTER_LINE" | awk '{print $1}')"
+
+	# check conf for existing cluster of the same name
+	if [ -n "$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")" ]; then
+		echo "error: cluster $CLUSTER specified with -c option exists in config $CONF"
+		usage 1>&2
+		exit 3
+	fi
+
+	# add custom config line to configuration
+	CONF_LINES="${CONF_LINES}${NL}${CUSTOM_CLUSTER_LINE}${NL}"
+else
+	# check for first param
+	if [ -z "$1" ]; then
+		usage 1>&2
+		exit 3
+	fi
+
+	CLUSTER="$1"
+fi
 
 # check for cluster in config
 CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
 if [ -z "$CLUSTER_LINE" ]; then
 	echo "error: cluster $CLUSTER not in config $CONF" 1>&2
-	exit 4
+	exit 3
 fi
 
 # check for existing tmux session of the specified cluster
 if [ -n "$(tmux ls | grep "cluster-$CLUSTER:")" ]; then
 	echo "error: tmux session cluster-$CLUSTER already exists" 1>&2
-	exit 5
+	exit 3
 fi
 
 # get hosts from cluster line
@@ -84,21 +156,26 @@ add_cluster_hosts $CLUSTER
 # remove leading space
 HOSTS="$(echo "$HOSTS" | sed 's/^ //')"
 
+if [ -n "$DUMP_HOSTS" ]; then
+	echo $HOSTS
+	exit
+fi
+
 # build tmux commands
 # get first host
 HOST="$(echo "$HOSTS" | awk '{print $1}')"
 # remove first host
 HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
 
-TMUX_COMMANDS="new -s \"cluster-$CLUSTER\" \"ssh $HOST\"\n"
+TMUX_COMMANDS="new -s \"cluster-$CLUSTER\" \"ssh $HOST\"$NL"
 
 for HOST in $HOSTS
 do
-	TMUX_COMMANDS="${TMUX_COMMANDS}splitw \"ssh $HOST\"\n"
-	TMUX_COMMANDS="${TMUX_COMMANDS}select-layout tiled\n"
+	TMUX_COMMANDS="${TMUX_COMMANDS}splitw \"ssh $HOST\"$NL"
+	TMUX_COMMANDS="${TMUX_COMMANDS}select-layout tiled$NL"
 done
 
-TMUX_COMMANDS="${TMUX_COMMANDS}set-window-option synchronize-panes on\n"
+TMUX_COMMANDS="${TMUX_COMMANDS}set-window-option synchronize-panes on$NL"
 
 TMPFILE="$(mktemp /tmp/tmux-cluster-XXXXXXXXXXXX)"
 
