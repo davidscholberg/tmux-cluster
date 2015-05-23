@@ -1,6 +1,6 @@
 ### tmux-cluster
 
-tmux-cluster is a wrapper script for tmux that aims to be fully compatible with [clusterssh](https://github.com/duncs/clusterssh) clusters configs.
+tmux-cluster is a wrapper script for [tmux](http://tmux.sourceforge.net/) that aims to be fully compatible with [clusterssh](https://github.com/duncs/clusterssh) clusters configs.
 
 tmux-cluster is written in pure shell and only depends on tmux and standard unix utils (grep, sed, awk, cut, etc.).
 
@@ -14,13 +14,11 @@ A new session will be created with the name `cluster-<clustername>`. All of the 
 
 It is best to run tmux-cluster outside of an attached tmux session, otherwise you'll end up with a nested tmux instance.
 
-#### Why?
+#### Why tmux-cluster?
 
-Question: Why does tmux-cluster exist? There are boatloads of clusterssh tmux wrappers out there, right?
+Question: Why does tmux-cluster exist? There are boatloads of clusterssh tmux wrappers out there already.
 
-Short answer: ease of configuration and better performance.
-
-Long answer:
+Answer: [Configuration](#Configuration) and [performance](#Performance).
 
 ##### Configuration
 
