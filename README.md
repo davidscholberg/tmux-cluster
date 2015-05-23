@@ -47,6 +47,7 @@ tmux-cluster should perform much faster than most of the clusterssh tmux wrapper
 
 #### TODO
 
+* Add method of alerting the user if any hosts in the cluster failed to connect.
 * Add ability to specify multiple clusters on command line, each one creating a different session.
 * Add command line option to specify path to clusterssh config.
 * Make tmux-cluster match clusterssh's behavior of using the "default" cluster if no cluster is specified.
