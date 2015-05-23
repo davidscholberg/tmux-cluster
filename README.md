@@ -48,5 +48,6 @@ tmux-cluster should perform much faster than most of the clusterssh tmux wrapper
 #### TODO
 
 * Add ability to specify multiple clusters on command line, each one creating a different session.
-* Add command line option to specify path to config.
+* Add command line option to specify path to clusterssh config.
 * Make tmux-cluster match clusterssh's behavior of using the "default" cluster if no cluster is specified.
+* Add command line option to specify path to custom ssh config.
