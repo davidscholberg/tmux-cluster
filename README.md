@@ -63,6 +63,7 @@ tmux-cluster will alert you of every single host that failed to connect by holdi
 
 #### TODO
 
+* Add usage examples to README.
 * Add ability to specify multiple clusters on command line, each one creating a different session.
 * Add command line option to specify a different pane layout to use instead of the default `tiled` layout.
 * Add command line option to disable pane synchronization.
