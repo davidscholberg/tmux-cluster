@@ -39,11 +39,23 @@ When one googles "tmux clusterssh", most of the results are for scripts that pur
 
 Clusterssh clusters files have a powerful configuration format that allows one to easily build up hierarchical groupings of servers. Being able to define a cluster and then use that cluster in the definition of other clusters is a huge benefit that many clusterssh-like tmux wrappers lack.
 
-[tmux-cssh](https://github.com/lowens/tmux-cssh) seems to support clusterssh clusters files, but (as of this writing) it doesn't seem to support using cluster names inside other cluster definitions for building cluster hierarchies.
+Here is an example clusterssh clusters file:
+
+```
+# first cluster, consisting of host1, host2, and host3
+cluster1 host1 host2 host3
+
+# second cluster, consisting of all hosts from first cluster as well as host4 and host5
+cluster2 cluster1 host4 host5
+```
+
+[lowens/tmux-cssh](https://github.com/lowens/tmux-cssh) seems to support clusterssh clusters files, but (as of this writing) it doesn't seem to support using cluster names inside other cluster definitions for building cluster hierarchies.
+
+[dennishafemann/tmux-cssh](https://github.com/dennishafemann/tmux-cssh) does support building cluster hierarchies, but it uses a different configuration format that is not compatible with clusterssh clusters files and is not as straightforward.
 
 ##### Performance
 
-tmux-cluster should perform much faster than most of the clusterssh tmux wrappers out there because of how tmux-cluster passes tmux commands to tmux. Most other clusterssh tmux wrappers make individual calls to tmux for every single tmux command that needs to be run. tmux-cluster, on the other hand, makes a list of native tmux commands first, places this list of commands into a temporary file, and then passes these commands to tmux with a single call to tmux's "source-file" command. This makes tmux-cluster very fast, even if you have much more than a handful of hosts in a particular cluster.
+tmux-cluster should perform much faster than most of the clusterssh tmux wrappers out there because of how tmux-cluster passes tmux commands to tmux. Most other clusterssh tmux wrappers make individual calls to tmux for every single tmux command that needs to be run. tmux-cluster, on the other hand, makes a list of native tmux commands first, places this list of commands into a temporary file, and then passes these commands to tmux with a single call to tmux's `source-file` command. This makes tmux-cluster very fast, even if you have much more than a handful of hosts in a particular cluster.
 
 ##### Error reporting
 
