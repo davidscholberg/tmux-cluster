@@ -80,6 +80,7 @@ tmux-cluster should perform faster than most of the clusterssh tmux wrappers out
 #### TODO
 
 * Add usage examples to README.
+* Allow tmux-cluster to run even if there's no clusters config, since -c option can still be used to create clusters.
 * Add ability to open multiple sessions of the same cluster by appending a number to the session name.
 * Add ability to specify multiple clusters on command line, each one creating a different session.
 * Add command line option to specify a different pane layout to use instead of the default `tiled` layout.
