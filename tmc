@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# define newline var
+# define newline var, per http://stackoverflow.com/a/9403076
 NL='
 '
 
@@ -103,7 +103,7 @@ done
 
 shift $((OPTIND-1))
 
-CONF_LINES="$(grep -Ev '(#|^$)' "$CONF")"
+CONF_LINES="$(grep -Ev '(^#|^$)' "$CONF")"
 
 if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
 	# check for first param
