@@ -19,7 +19,7 @@ Options:
                             clusters config.
 ```
 
-tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh/clusters`.
+tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh/clusters`. See the [configuration](#configuration) section for more info on the configuration syntax.
 
 A new session will be created with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized.
 
@@ -64,6 +64,8 @@ tmux-cluster will alert you of every single host that failed to connect by holdi
 #### TODO
 
 * Add ability to specify multiple clusters on command line, each one creating a different session.
+* Add command line option to specify a different pane layout to use instead of the default `tiled` layout.
+* Add command line option to disable pane synchronization.
 * Add command line option to specify path to clusterssh config.
 * Make tmux-cluster match clusterssh's behavior of using the "default" cluster if no cluster is specified.
 * Add command line option to specify path to custom ssh config.
