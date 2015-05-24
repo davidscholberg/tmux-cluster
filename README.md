@@ -37,7 +37,7 @@ Answer: [Configuration](#configuration), [session handling](#session-handling), 
 
 When one googles "tmux clusterssh", most of the results are for scripts that purport to be clusterssh-like, but they don't actually support clusterssh clusters files.
 
-Clusterssh clusters files have a powerful configuration format that allows one to easily build up hierarchical groupings of servers. Being able to define a cluster and then use that cluster in the definition of other clusters is a huge benefit that many clusterssh-like tmux wrappers lack.
+Clusterssh clusters files have a simple but powerful configuration format that allows one to easily build up hierarchical groupings of servers. Being able to define a cluster and then use that cluster in the definition of other clusters is a huge benefit that many clusterssh-like tmux wrappers lack.
 
 Here is an example clusterssh clusters file:
 
