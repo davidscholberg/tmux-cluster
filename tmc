@@ -165,8 +165,11 @@ fi
 # get first host
 HOST="$(echo "$HOSTS" | awk '{print $1}')"
 # remove first host
-# TODO: fix the case where there's only one host in the cluster
-HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
+if [ "$(echo "$HOSTS" | grep -o ' ' | wc -l)" -gt 0 ]; then
+	HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
+else
+	HOSTS=""
+fi
 
 SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
 TMUX_COMMANDS="new -s \"cluster-$CLUSTER\" \"$SHELL_CMD\"$NL"
