@@ -31,7 +31,7 @@ It is best to run tmux-cluster outside of an attached tmux session, otherwise yo
 
 Question: Why does tmux-cluster exist? There are boatloads of clusterssh tmux wrappers out there already.
 
-Answer: [Configuration](#configuration) and [performance](#performance).
+Answer: [Configuration](#configuration), [performance](#performance), and [error reporting](#error-reporting).
 
 ##### Configuration
 
@@ -45,9 +45,12 @@ Clusterssh clusters files have a powerful configuration format that allows one t
 
 tmux-cluster should perform much faster than most of the clusterssh tmux wrappers out there because of how tmux-cluster passes tmux commands to tmux. Most other clusterssh tmux wrappers make individual calls to tmux for every single tmux command that needs to be run. tmux-cluster, on the other hand, makes a list of native tmux commands first, places this list of commands into a temporary file, and then passes these commands to tmux with a single call to tmux's "source-file" command. This makes tmux-cluster very fast, even if you have much more than a handful of hosts in a particular cluster.
 
+##### Error reporting
+
+tmux-cluster will alert you of every single host that failed to connect by holding open the panes that contain the failed connections until you press enter. This way, you can easily see which hosts failed instead of trying to figure it out manually by comparing open panes with the list of hosts that are supposed to be in the cluster.
+
 #### TODO
 
-* Add method of alerting the user if any hosts in the cluster failed to connect.
 * Add ability to specify multiple clusters on command line, each one creating a different session.
 * Add command line option to specify path to clusterssh config.
 * Make tmux-cluster match clusterssh's behavior of using the "default" cluster if no cluster is specified.

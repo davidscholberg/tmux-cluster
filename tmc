@@ -157,7 +157,7 @@ add_cluster_hosts $CLUSTER
 HOSTS="$(echo "$HOSTS" | sed 's/^ //')"
 
 if [ -n "$DUMP_HOSTS" ]; then
-	echo $HOSTS
+	echo "$HOSTS"
 	exit
 fi
 
@@ -165,13 +165,15 @@ fi
 # get first host
 HOST="$(echo "$HOSTS" | awk '{print $1}')"
 # remove first host
+# TODO: fix the case where there's only one host in the cluster
 HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
 
-TMUX_COMMANDS="new -s \"cluster-$CLUSTER\" \"ssh $HOST\"$NL"
+SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+TMUX_COMMANDS="new -s \"cluster-$CLUSTER\" \"$SHELL_CMD\"$NL"
 
-for HOST in $HOSTS
-do
-	TMUX_COMMANDS="${TMUX_COMMANDS}splitw \"ssh $HOST\"$NL"
+for HOST in $HOSTS; do
+	SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+	TMUX_COMMANDS="${TMUX_COMMANDS}splitw \"$SHELL_CMD\"$NL"
 	TMUX_COMMANDS="${TMUX_COMMANDS}select-layout tiled$NL"
 done
 
