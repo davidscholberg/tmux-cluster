@@ -25,6 +25,8 @@ Usage: $(basename "$0") [OPTIONS] [CLUSTERNAME]
 
 Options:
     -h              Display help message and quit
+    -l              Specify the default username to use for connections (if different from the currently logged in user). 
+                    NOTE: will be overridden by <user>@<host>
     -d              Dump space-separated list of hosts in CLUSTERNAME
     -c CLUSTERLINE  Create custom cluster
                         CLUSTERLINE is treated as a clusters config line.
@@ -74,14 +76,18 @@ fi
 
 DUMP_HOSTS=""
 CUSTOM_CLUSTER_LINE=""
+DEFAULT_USERNAME=""
 
 # parse args
-while getopts :hdc: OPT; do
+while getopts :hl:dc: OPT; do
 	case $OPT in
 		h)
 			usage
 			exit
 			;;
+        l)
+            DEFAULT_USERNAME="$OPTARG"
+            ;;
 		d)
 			DUMP_HOSTS="true"
 			;;
@@ -161,9 +167,26 @@ if [ -n "$DUMP_HOSTS" ]; then
 	exit
 fi
 
+# Rebuild hosts list with default username
+if [ -n "$DEFAULT_USERNAME" ]; then
+    HOST_USERNAME=""
+    for HOST in $HOSTS; do
+       if [[ $HOST == *"@"* ]]; then
+           HOSTS_USERNAME="$HOSTS_USERNAME $HOST"
+       else
+           HOST=$DEFAULT_USERNAME"@"$HOST
+           HOSTS_USERNAME="$HOSTS_USERNAME $HOST"
+       fi
+    done
+    # remove leading space
+    HOSTS_USERNAME="$(echo "$HOSTS_USERNAME" | sed 's/^ //')"
+    HOSTS="$HOSTS_USERNAME"
+fi
+
 # build tmux commands
 # get first host
 HOST="$(echo "$HOSTS" | awk '{print $1}')"
+
 # remove first host
 if [ "$(echo "$HOSTS" | grep -o ' ' | wc -l)" -gt 0 ]; then
 	HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
