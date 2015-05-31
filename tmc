@@ -26,6 +26,9 @@ Usage: $(basename "$0") [OPTIONS] [CLUSTERNAME]
 Options:
     -h              Display help message and quit.
     -d              Dump space-separated list of hosts in CLUSTERNAME.
+                        Conflicts with -t option.
+    -t              Dump generated list of tmux commands.
+                        Conflicts with -d option.
     -c CLUSTERLINE  Create custom cluster
                         CLUSTERLINE is treated as a clusters config line.
                         This option conflicts with passing CLUSTERNAME.
@@ -75,11 +78,12 @@ if [ ! -f "$CONF" ]; then
 fi
 
 DUMP_HOSTS=""
+DUMP_TMUX_CMDS=""
 CUSTOM_CLUSTER_LINE=""
 EXCLUDED_HOSTS=""
 
 # parse args
-while getopts :hdc:x: OPT; do
+while getopts :hdtc:x: OPT; do
 	case $OPT in
 		h)
 			usage
@@ -87,6 +91,9 @@ while getopts :hdc:x: OPT; do
 			;;
 		d)
 			DUMP_HOSTS="true"
+			;;
+		t)
+			DUMP_TMUX_CMDS="true"
 			;;
 		c)
 			CUSTOM_CLUSTER_LINE="$OPTARG"
@@ -108,6 +115,13 @@ while getopts :hdc:x: OPT; do
 done
 
 shift $((OPTIND-1))
+
+# check for conficting dump options
+if [ -n "$DUMP_HOSTS" -a -n "$DUMP_TMUX_CMDS" ]; then
+	echo "error: -d and -t options conflict" 1>&2
+	usage 1>&2
+	exit 3
+fi
 
 CONF_LINES="$(grep -Ev '(^#|^$)' "$CONF")"
 
@@ -149,7 +163,7 @@ if [ -z "$CLUSTER_LINE" ]; then
 fi
 
 # check for existing tmux session of the specified cluster
-# FIXME: this should not error out if we just want to dump the hosts
+# FIXME: this should not error out if we're using one of the dump flags
 if [ -n "$(tmux ls 2>/dev/null | grep "cluster-$CLUSTER:")" ]; then
 	echo "error: tmux session cluster-$CLUSTER already exists" 1>&2
 	exit 3
@@ -188,18 +202,24 @@ else
 fi
 
 SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
-TMUX_COMMANDS="new -s \"cluster-$CLUSTER\" \"$SHELL_CMD\"$NL"
+TMUX_CMDS="new -s \"cluster-$CLUSTER\" \"$SHELL_CMD\"$NL"
 
 for HOST in $HOSTS; do
 	SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
-	TMUX_COMMANDS="${TMUX_COMMANDS}splitw \"$SHELL_CMD\"$NL"
-	TMUX_COMMANDS="${TMUX_COMMANDS}select-layout tiled$NL"
+	TMUX_CMDS="${TMUX_CMDS}splitw \"$SHELL_CMD\"$NL"
+	TMUX_CMDS="${TMUX_CMDS}select-layout tiled$NL"
 done
 
-TMUX_COMMANDS="${TMUX_COMMANDS}set-window-option synchronize-panes on$NL"
+TMUX_CMDS="${TMUX_CMDS}set-window-option synchronize-panes on$NL"
+
+# dump tmux commands
+if [ -n "$DUMP_TMUX_CMDS" ]; then
+	echo -n "$TMUX_CMDS"
+	exit
+fi
 
 TMPFILE="$(mktemp /tmp/tmux-cluster-XXXXXXXXXXXX)"
 
-echo "$TMUX_COMMANDS" > "$TMPFILE"
+echo "$TMUX_CMDS" > "$TMPFILE"
 tmux source-file "$TMPFILE"
 rm "$TMPFILE"

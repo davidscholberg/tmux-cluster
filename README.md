@@ -11,7 +11,10 @@ Usage: tmc [OPTIONS] [CLUSTERNAME]
 
 Options:
     -h              Display help message and quit
-    -d              Dump space-separated list of hosts in CLUSTERNAME
+    -d              Dump space-separated list of hosts in CLUSTERNAME.
+                        Conflicts with -t option.
+    -t              Dump generated list of tmux commands.
+                        Conflicts with -d option.
     -c CLUSTERLINE  Create custom cluster
                         CLUSTERLINE is treated as a clusters config line.
                         This option conflicts with passing CLUSTERNAME.
@@ -83,7 +86,6 @@ tmux-cluster should perform faster than most of the clusterssh tmux wrappers out
 
 * Add usage examples to README.
 * Allow tmux-cluster to run even if there's no clusters config, since -c option can still be used to create clusters.
-* Add command line option to dump the generated list of tmux commands.
 * Add ability to resolve cluster names in the EXCLUDES list.
 * Add command line option to exclude current host from cluster.
 * Fix issue where hosts cannot be dumped if the tmux session of the same name exists.
