@@ -17,6 +17,8 @@ Options:
                         This option conflicts with passing CLUSTERNAME.
                         The name used for the cluster must not exist in the
                             clusters config.
+    -x EXCLUDES     Space-separated list of hosts to exclude from cluster.
+                        The hosts in EXCLUDES will not be connected to.
 ```
 
 tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh/clusters`. See the [configuration](#configuration) section for more info on the configuration syntax.
@@ -81,6 +83,9 @@ tmux-cluster should perform faster than most of the clusterssh tmux wrappers out
 
 * Add usage examples to README.
 * Allow tmux-cluster to run even if there's no clusters config, since -c option can still be used to create clusters.
+* Add command line option to dump the generated list of tmux commands.
+* Add ability to resolve cluster names in the EXCLUDES list.
+* Add command line option to exclude current host from cluster.
 * Add ability to open multiple sessions of the same cluster by appending a number to the session name.
 * Add ability to specify multiple clusters on command line, each one creating a different session.
 * Add command line option to specify a different pane layout to use instead of the default `tiled` layout.

@@ -24,13 +24,15 @@ usage() {
 Usage: $(basename "$0") [OPTIONS] [CLUSTERNAME]
 
 Options:
-    -h              Display help message and quit
-    -d              Dump space-separated list of hosts in CLUSTERNAME
+    -h              Display help message and quit.
+    -d              Dump space-separated list of hosts in CLUSTERNAME.
     -c CLUSTERLINE  Create custom cluster
                         CLUSTERLINE is treated as a clusters config line.
                         This option conflicts with passing CLUSTERNAME.
                         The name used for the cluster must not exist in the
                             clusters config.
+    -x EXCLUDES     Space-separated list of hosts to exclude from cluster.
+                        The hosts in EXCLUDES will not be connected to.
 EOF
 }
 
@@ -74,9 +76,10 @@ fi
 
 DUMP_HOSTS=""
 CUSTOM_CLUSTER_LINE=""
+EXCLUDED_HOSTS=""
 
 # parse args
-while getopts :hdc: OPT; do
+while getopts :hdc:x: OPT; do
 	case $OPT in
 		h)
 			usage
@@ -87,6 +90,9 @@ while getopts :hdc: OPT; do
 			;;
 		c)
 			CUSTOM_CLUSTER_LINE="$OPTARG"
+			;;
+		x)
+			EXCLUDED_HOSTS="$OPTARG"
 			;;
 		\?)
 			echo "error: invalid option -$OPTARG" 1>&2
@@ -153,9 +159,18 @@ HOSTS=""
 SEEN_CLUSTERS=""
 add_cluster_hosts $CLUSTER
 
+# exclude hosts
+# TODO: allow EXCLUDED_HOSTS to also contain cluster names
+if [ -n "$EXCLUDED_HOSTS" ]; then
+	for HOST in $EXCLUDED_HOSTS; do
+		HOSTS="$(echo "$HOSTS" | sed -r "s/ $HOST( |$)/ /g")"
+	done
+fi
+
 # remove leading space
 HOSTS="$(echo "$HOSTS" | sed 's/^ //')"
 
+# dump hosts
 if [ -n "$DUMP_HOSTS" ]; then
 	echo "$HOSTS"
 	exit
