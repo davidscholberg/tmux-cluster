@@ -149,7 +149,8 @@ if [ -z "$CLUSTER_LINE" ]; then
 fi
 
 # check for existing tmux session of the specified cluster
-if [ -n "$(tmux ls | grep "cluster-$CLUSTER:")" ]; then
+# FIXME: this should not error out if we just want to dump the hosts
+if [ -n "$(tmux ls 2>/dev/null | grep "cluster-$CLUSTER:")" ]; then
 	echo "error: tmux session cluster-$CLUSTER already exists" 1>&2
 	exit 3
 fi
