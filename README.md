@@ -87,6 +87,7 @@ tmux-cluster should perform faster than most of the clusterssh tmux wrappers out
 * Add usage examples to README.
 * Allow tmux-cluster to run even if there's no clusters config, since -c option can still be used to create clusters.
 * Add ability to resolve cluster names in the EXCLUDES list.
+* Add command line option to start a local login shell after ssh exits.
 * Add command line option to exclude current host from cluster.
 * Fix issue where hosts cannot be dumped if the tmux session of the same name exists.
 * Add ability to open multiple sessions of the same cluster by appending a number to the session name.
