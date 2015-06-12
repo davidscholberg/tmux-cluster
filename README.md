@@ -89,7 +89,7 @@ tmux-cluster should perform faster than most of the clusterssh tmux wrappers out
 * Add ability to resolve cluster names in the EXCLUDES list.
 * Add command line option to start a local login shell after ssh exits.
 * Add command line option to exclude current host from cluster.
-* Add ability to open multiple sessions of the same cluster by appending a number to the session name.
+* Add command line option to specify unique suffix to append to session name to allow multiple sessions of the same cluster. Could default to appending 4 digit number.
 * Add ability to specify multiple clusters on command line, each one creating a different session.
 * Add command line option to specify a different pane layout to use instead of the default `tiled` layout.
 * Add command line option to disable pane synchronization.
