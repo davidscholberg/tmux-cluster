@@ -162,10 +162,12 @@ if [ -z "$CLUSTER_LINE" ]; then
 	exit 3
 fi
 
+SESSION_NAME="cluster-$CLUSTER"
+
 # check for existing tmux session of the specified cluster
 if [ -z "$DUMP_HOSTS" -a -z "$DUMP_TMUX_CMDS" ]; then
-	if [ -n "$(tmux ls 2>/dev/null | grep "cluster-$CLUSTER:")" ]; then
-		echo "error: tmux session cluster-$CLUSTER already exists" 1>&2
+	if [ -n "$(tmux ls 2>/dev/null | grep "$SESSION_NAME:")" ]; then
+		echo "error: tmux session $SESSION_NAME already exists" 1>&2
 		exit 3
 	fi
 fi
@@ -203,15 +205,22 @@ else
 fi
 
 SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
-TMUX_CMDS="new -s \"cluster-$CLUSTER\" \"$SHELL_CMD\"$NL"
+TMUX_CMDS="new -d -s \"$SESSION_NAME\" \"$SHELL_CMD\"$NL"
 
 for HOST in $HOSTS; do
 	SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
-	TMUX_CMDS="${TMUX_CMDS}splitw \"$SHELL_CMD\"$NL"
-	TMUX_CMDS="${TMUX_CMDS}select-layout tiled$NL"
+	TMUX_CMDS="${TMUX_CMDS}splitw -t \"$SESSION_NAME\" \"$SHELL_CMD\"$NL"
+	TMUX_CMDS="${TMUX_CMDS}select-layout -t \"$SESSION_NAME\" tiled$NL"
 done
 
-TMUX_CMDS="${TMUX_CMDS}set-window-option synchronize-panes on$NL"
+TMUX_CMDS="${TMUX_CMDS}set-window-option -t \"$SESSION_NAME\" synchronize-panes on$NL"
+
+# if we're inside a tmux client, switch-client, else attach
+if [ -n "$TMUX" ]; then
+	TMUX_CMDS="${TMUX_CMDS}switch-client -t \"$SESSION_NAME\"$NL"
+else
+	TMUX_CMDS="${TMUX_CMDS}attach -t \"$SESSION_NAME\"$NL"
+fi
 
 # dump tmux commands
 if [ -n "$DUMP_TMUX_CMDS" ]; then

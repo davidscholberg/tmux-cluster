@@ -28,9 +28,9 @@ tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh
 
 A new session will be created with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized.
 
-Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` used is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line.
+You can run tmux-cluster either from outside or inside an attached tmux instance. In either case, tmux-cluster will automatically attach your terminal to the newly created cluster session.
 
-It is best to run tmux-cluster outside of an attached tmux session, otherwise you'll end up with a nested tmux instance.
+Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` used is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line.
 
 #### Why tmux-cluster?
 
