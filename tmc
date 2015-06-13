@@ -222,6 +222,9 @@ else
 	TMUX_CMDS="${TMUX_CMDS}attach -t \"$SESSION_NAME\"$NL"
 fi
 
+# fix issue with incorrect layout after call to switch-client
+TMUX_CMDS="${TMUX_CMDS}select-layout -t \"$SESSION_NAME\" tiled$NL"
+
 # dump tmux commands
 if [ -n "$DUMP_TMUX_CMDS" ]; then
 	echo -n "$TMUX_CMDS"
