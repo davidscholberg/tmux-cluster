@@ -28,7 +28,7 @@ tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh
 
 A new session will be created with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized.
 
-You can run tmux-cluster either from outside or inside an attached tmux instance. In either case, tmux-cluster will automatically attach your terminal to the newly created cluster session.
+You can run tmux-cluster either from outside or inside an attached tmux instance. In either case, tmux-cluster will automatically attach your terminal to the newly created cluster session. You can also use tmux-cluster as a tmux plugin (see the [Installation via tmux plugin manager](#installation-via-tmux-plugin-manager) section).
 
 Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` used is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line.
 
@@ -44,7 +44,7 @@ There are two ways to install tmux-cluster. You can do so manually or through th
 #### Installation via tmux plugin manager
 
 1. Ensure that [tmux plugin manager](https://github.com/tmux-plugins/tpm) is installed.
-1. Add `davidscholberg/tmux-cluster` to your list of tmux plugins.
+1. Add `davidscholberg/tmux-cluster` to your list of tmux plugins and install it with `prefix + I`.
 1. Optionally configure a tmux keybinding for tmux-cluster using the `@tmux_cluster_prompt_key` option in your `~/.tmux/conf` file.
   * E.g. `set-option -g @tmux_cluster_prompt_key Q`
   * If this option is not specified, `C` is the default.
