@@ -46,6 +46,7 @@ There are two ways to install tmux-cluster. You can do so manually or through th
 1. Ensure that [tmux plugin manager](https://github.com/tmux-plugins/tpm) is installed.
 1. Add `davidscholberg/tmux-cluster` to your list of tmux plugins.
 1. Optionally configure a tmux keybinding for tmux-cluster using the `@tmux_cluster_prompt_key` option in your `~/.tmux/conf` file.
+  * E.g. `set-option -g @tmux_cluster_prompt_key Q`
   * If this option is not specified, `C` is the default.
 1. To use this plugin, open a tmux-cluster prompt with `prefix + C` (or whatever you specified in `@tmux_cluster_prompt_key`), and type the name of the cluster you want to launch.
 1. Optionally copy or symlink the `tmc` script into a directory in your `$PATH` if you want to be able to run `tmc` on the command line.
