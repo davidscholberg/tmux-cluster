@@ -21,6 +21,11 @@
 NL='
 '
 
+# error codes
+ERR_DEPENDENCY=1
+ERR_CONFIG=2
+ERR_ARG=3
+
 usage() {
 	cat << EOF
 Usage: $(basename "$0") [OPTIONS] [CLUSTERNAME]
@@ -68,7 +73,7 @@ add_cluster_hosts() {
 # check if tmux is in PATH
 if [ -z "$(which tmux)" ]; then
 	echo "error: tmux not found in path: $PATH" 1>&2
-	exit 1
+	exit "$ERR_DEPENDENCY"
 fi
 
 DUMP_HOSTS=""
@@ -98,12 +103,12 @@ while getopts :hdtc:x: OPT; do
 		\?)
 			echo "error: invalid option -$OPTARG" 1>&2
 			usage 1>&2
-			exit 3
+			exit "$ERR_ARG"
 			;;
 		:)
 			echo "error: missing argument for option -$OPTARG" 1>&2
 			usage 1>&2
-			exit 3
+			exit "$ERR_ARG"
 			;;
 	esac
 done
@@ -114,7 +119,7 @@ shift $((OPTIND-1))
 if [ -n "$DUMP_HOSTS" -a -n "$DUMP_TMUX_CMDS" ]; then
 	echo "error: -d and -t options conflict" 1>&2
 	usage 1>&2
-	exit 3
+	exit "$ERR_ARG"
 fi
 
 CONF="$HOME/.clusterssh/clusters"
@@ -123,7 +128,7 @@ CONF="$HOME/.clusterssh/clusters"
 if [ ! -f "$CONF" -a -z "$CUSTOM_CLUSTER_LINE" ]; then
 	echo "error: either config $CONF must exist or -c option must be used" 1>&2
 	usage 1>&2
-	exit 3
+	exit "$ERR_ARG"
 fi
 
 CONF_LINES=""
@@ -135,9 +140,9 @@ fi
 if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
 	# check for first param
 	if [ -n "$1" ]; then
-		echo "error: passing CLUSTERNAME conflicts with -c option"
+		echo "error: passing CLUSTERNAME conflicts with -c option" 1>&2
 		usage 1>&2
-		exit 3
+		exit "$ERR_ARG"
 	fi
 
 	# get cluster name
@@ -145,9 +150,9 @@ if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
 
 	# check conf for existing cluster of the same name
 	if [ -n "$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")" ]; then
-		echo "error: cluster $CLUSTER specified with -c option exists in config $CONF"
+		echo "error: cluster $CLUSTER specified with -c option exists in config $CONF" 1>&2
 		usage 1>&2
-		exit 3
+		exit "$ERR_ARG"
 	fi
 
 	# add custom config line to configuration
@@ -156,7 +161,7 @@ else
 	# check for first param
 	if [ -z "$1" ]; then
 		usage 1>&2
-		exit 3
+		exit "$ERR_ARG"
 	fi
 
 	CLUSTER="$1"
@@ -166,7 +171,7 @@ fi
 CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
 if [ -z "$CLUSTER_LINE" ]; then
 	echo "error: cluster $CLUSTER not in config $CONF" 1>&2
-	exit 3
+	exit "$ERR_ARG"
 fi
 
 SESSION_NAME="cluster-$CLUSTER"
@@ -175,7 +180,7 @@ SESSION_NAME="cluster-$CLUSTER"
 if [ -z "$DUMP_HOSTS" -a -z "$DUMP_TMUX_CMDS" ]; then
 	if [ -n "$(tmux ls 2>/dev/null | grep "$SESSION_NAME:")" ]; then
 		echo "error: tmux session $SESSION_NAME already exists" 1>&2
-		exit 3
+		exit "$ERR_ARG"
 	fi
 fi
 
