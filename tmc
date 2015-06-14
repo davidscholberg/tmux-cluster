@@ -69,14 +69,6 @@ if [ -z "$(which tmux)" ]; then
 	exit 1
 fi
 
-CONF="$HOME/.clusterssh/clusters"
-
-# check for conf file
-if [ ! -f "$CONF" ]; then
-	echo "error: config $CONF not found" 1>&2
-	exit 2
-fi
-
 DUMP_HOSTS=""
 DUMP_TMUX_CMDS=""
 CUSTOM_CLUSTER_LINE=""
@@ -123,7 +115,20 @@ if [ -n "$DUMP_HOSTS" -a -n "$DUMP_TMUX_CMDS" ]; then
 	exit 3
 fi
 
-CONF_LINES="$(grep -Ev '(^#|^$)' "$CONF")"
+CONF="$HOME/.clusterssh/clusters"
+
+# check for conf file or custom cluster option
+if [ ! -f "$CONF" -a -z "$CUSTOM_CLUSTER_LINE" ]; then
+	echo "error: either config $CONF must exist or -c option must be used" 1>&2
+	usage 1>&2
+	exit 3
+fi
+
+CONF_LINES=""
+
+if [ -f "$CONF" ]; then
+	CONF_LINES="$(grep -Ev '(^#|^$)' "$CONF")"
+fi
 
 if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
 	# check for first param
