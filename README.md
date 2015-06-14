@@ -32,6 +32,24 @@ You can run tmux-cluster either from outside or inside an attached tmux instance
 
 Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` used is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line.
 
+#### Installation
+
+There are two ways to install tmux-cluster. You can do so manually or through the [tmux plugin manager](https://github.com/tmux-plugins/tpm).
+
+##### Manual installation
+
+# Clone this repository: `git clone https://github.com/davidscholberg/tmux-cluster`
+# Optionally copy or symlink the `tmc` script into a directory in your `$PATH`.
+
+##### Installation via tmux plugin manager
+
+# Ensure that [tmux plugin manager](https://github.com/tmux-plugins/tpm) is installed.
+# Add `davidscholberg/tmux-cluster` to your list of tmux plugins.
+# Optionally configure a tmux keybinding for tmux-cluster using the `@tmux_cluster_prompt_key` option in your `~/.tmux/conf` file.
+  * If this option is not specified, `C` is the default.
+# To use this plugin, open a tmux-cluster prompt with `prefix + C` (or whatever you specified in `@tmux_cluster_prompt_key`), and type the name of the cluster you want to launch.
+# Optionally copy or symlink the `tmc` script into a directory in your `$PATH` if you want to be able to run `tmc` on the command line.
+
 #### Why tmux-cluster?
 
 Question: Why does tmux-cluster exist? There are boatloads of clusterssh tmux wrappers out there already.
