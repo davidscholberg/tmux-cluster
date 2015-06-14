@@ -1,10 +1,10 @@
-### tmux-cluster
+## tmux-cluster
 
 tmux-cluster is a wrapper script for [tmux](http://tmux.sourceforge.net/) that aims to be fully compatible with [clusterssh](https://github.com/duncs/clusterssh) clusters configs.
 
 tmux-cluster is written in pure shell and only depends on tmux and standard unix utils (grep, sed, awk, cut, etc.).
 
-#### Usage
+### Usage
 
 ```
 Usage: tmc [OPTIONS] [CLUSTERNAME]
@@ -32,16 +32,16 @@ You can run tmux-cluster either from outside or inside an attached tmux instance
 
 Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` used is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line.
 
-#### Installation
+### Installation
 
 There are two ways to install tmux-cluster. You can do so manually or through the [tmux plugin manager](https://github.com/tmux-plugins/tpm).
 
-##### Manual installation
+#### Manual installation
 
 1. Clone this repository: `git clone https://github.com/davidscholberg/tmux-cluster`
 1. Optionally copy or symlink the `tmc` script into a directory in your `$PATH`.
 
-##### Installation via tmux plugin manager
+#### Installation via tmux plugin manager
 
 1. Ensure that [tmux plugin manager](https://github.com/tmux-plugins/tpm) is installed.
 1. Add `davidscholberg/tmux-cluster` to your list of tmux plugins.
@@ -50,13 +50,13 @@ There are two ways to install tmux-cluster. You can do so manually or through th
 1. To use this plugin, open a tmux-cluster prompt with `prefix + C` (or whatever you specified in `@tmux_cluster_prompt_key`), and type the name of the cluster you want to launch.
 1. Optionally copy or symlink the `tmc` script into a directory in your `$PATH` if you want to be able to run `tmc` on the command line.
 
-#### Why tmux-cluster?
+### Why tmux-cluster?
 
 Question: Why does tmux-cluster exist? There are boatloads of clusterssh tmux wrappers out there already.
 
 Answer: [Configuration](#configuration), [session handling](#session-handling), [error reporting](#error-reporting), and [performance](#performance).
 
-##### Configuration
+#### Configuration
 
 When one googles "tmux clusterssh", most of the results are for scripts that purport to be clusterssh-like, but they don't actually support clusterssh clusters files.
 
@@ -76,7 +76,7 @@ cluster2 cluster1 host4 host5
 
 [dennishafemann/tmux-cssh](https://github.com/dennishafemann/tmux-cssh) does support building cluster hierarchies, but it uses a different configuration format that is not compatible with clusterssh clusters files and is not as straightforward.
 
-##### Session handling
+#### Session handling
 
 tmux-cluster uses the name of the specified cluster to build the tmux session name, so that you can have multiple simultaneous tmux-cluster sessions open. The name of the session is of the form `cluster-<name>`, where `<name>` is the name of the specified cluster. Because each session name is preceded with `cluster-`, it's easy to see at a glance which tmux-cluster sessions are open since they'll be grouped together alphabetically.
 
@@ -92,15 +92,15 @@ If you run `tmc cluster1`, then the name of the session that tmux-cluster create
 
 If you attempt to open a cluster for which there is already an open tmux session, then tmux-cluster will quit gracefully, informing you that the session name is already taken.
 
-##### Error reporting
+#### Error reporting
 
 tmux-cluster will alert you of every single host that failed to connect by holding open the panes that contain the failed connections until you press enter. This way, you can easily see which hosts failed instead of trying to figure it out manually by comparing open panes with the list of hosts that are supposed to be in the cluster.
 
-##### Performance
+#### Performance
 
 tmux-cluster should perform faster than most of the clusterssh tmux wrappers out there because of how tmux-cluster passes tmux commands to tmux. Most other clusterssh tmux wrappers make individual calls to tmux for every single tmux command that needs to be run. tmux-cluster, on the other hand, makes a list of native tmux commands first, places this list of commands into a temporary file, and then passes these commands to tmux with a single call to tmux's `source-file` command. This makes tmux-cluster very fast, even if you have much more than a handful of hosts in a particular cluster.
 
-#### TODO
+### TODO
 
 * Add usage examples to README.
 * Add ability to resolve cluster names in the EXCLUDES list.
