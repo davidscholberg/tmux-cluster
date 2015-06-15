@@ -70,6 +70,11 @@ add_cluster_hosts() {
 
 }
 
+# get dimensions of current tmux window
+get_current_tmux_window_dimesions() {
+    echo "$(tmux list-windows | grep -E '[0-9]+: \w+\*' | sed -r 's/^.+\[([0-9]+x[0-9]+)\].+$/\1/')"
+}
+
 # check if tmux is in PATH
 if [ -z "$(which tmux)" ]; then
     echo "error: tmux not found in path: $PATH" 1>&2
@@ -217,7 +222,18 @@ else
 fi
 
 SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
-TMUX_CMDS="new -d -s \"$SESSION_NAME\" \"$SHELL_CMD\"$NL"
+
+# if we're running in tmux, get dimensions of the current window
+# this is needed if tmc is run inside run-shell, since the default window size is 80x24
+TMUX_WINDOW_XY_ARGS=""
+if [ -n "$TMUX" ]; then
+    TMUX_DIMENSIONS="$(get_current_tmux_window_dimesions)"
+    TMUX_WINDOW_X="$(echo "$TMUX_DIMENSIONS" | cut -f 1 -d 'x')"
+    TMUX_WINDOW_Y="$(echo "$TMUX_DIMENSIONS" | cut -f 2 -d 'x')"
+    TMUX_WINDOW_XY_ARGS="-x $TMUX_WINDOW_X -y $TMUX_WINDOW_Y"
+fi
+
+TMUX_CMDS="new -d $TMUX_WINDOW_XY_ARGS -s \"$SESSION_NAME\" \"$SHELL_CMD\"$NL"
 
 for HOST in $HOSTS; do
     SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
