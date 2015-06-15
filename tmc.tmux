@@ -23,7 +23,7 @@ PROMPT_KEY_OPTION="@tmux_cluster_prompt_key"
 PROMPT_KEY="$(tmux show-options -g | grep -E "^$PROMPT_KEY_OPTION" | cut -f 2 -d ' ' | sed 's/"//g')"
 
 if [ -z "$PROMPT_KEY" ]; then
-	PROMPT_KEY="C"
+    PROMPT_KEY="C"
 fi
 
 # we redirect stderr to stdout so that it gets displayed in the tmux pane (see run-shell)

@@ -27,7 +27,7 @@ ERR_CONFIG=2
 ERR_ARG=3
 
 usage() {
-	cat << EOF
+    cat << EOF
 Usage: $(basename "$0") [OPTIONS] [CLUSTERNAME]
 
 Options:
@@ -49,31 +49,31 @@ EOF
 # Add cluster hosts to global $HOSTS
 # param 1 should be cluster name
 add_cluster_hosts() {
-	local CLUSTER="$1"
+    local CLUSTER="$1"
 
-	# check for cluster in config
-	local CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
-	if [ -z "$CLUSTER_LINE" ]; then
-		HOSTS="$HOSTS $CLUSTER"
-	else
-		SEEN_CLUSTERS="$SEEN_CLUSTERS $CLUSTER"
+    # check for cluster in config
+    local CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
+    if [ -z "$CLUSTER_LINE" ]; then
+        HOSTS="$HOSTS $CLUSTER"
+    else
+        SEEN_CLUSTERS="$SEEN_CLUSTERS $CLUSTER"
 
-		# get hosts from cluster line
-		local CLUSTER_LINE_HOSTS="$(echo "$CLUSTER_LINE" | cut -f 2- -d ' ')"
+        # get hosts from cluster line
+        local CLUSTER_LINE_HOSTS="$(echo "$CLUSTER_LINE" | cut -f 2- -d ' ')"
 
-		for HOST in $CLUSTER_LINE_HOSTS; do
-			if [ -z "$(echo "$HOSTS" | grep -E " $HOST( |$)")" -a -z "$(echo "$SEEN_CLUSTERS" | grep -E " $HOST( |$)")" ]; then
-				add_cluster_hosts "$HOST"
-			fi
-		done
-	fi
+        for HOST in $CLUSTER_LINE_HOSTS; do
+            if [ -z "$(echo "$HOSTS" | grep -E " $HOST( |$)")" -a -z "$(echo "$SEEN_CLUSTERS" | grep -E " $HOST( |$)")" ]; then
+                add_cluster_hosts "$HOST"
+            fi
+        done
+    fi
 
 }
 
 # check if tmux is in PATH
 if [ -z "$(which tmux)" ]; then
-	echo "error: tmux not found in path: $PATH" 1>&2
-	exit "$ERR_DEPENDENCY"
+    echo "error: tmux not found in path: $PATH" 1>&2
+    exit "$ERR_DEPENDENCY"
 fi
 
 DUMP_HOSTS=""
@@ -83,105 +83,105 @@ EXCLUDED_HOSTS=""
 
 # parse args
 while getopts :hdtc:x: OPT; do
-	case $OPT in
-		h)
-			usage
-			exit
-			;;
-		d)
-			DUMP_HOSTS="true"
-			;;
-		t)
-			DUMP_TMUX_CMDS="true"
-			;;
-		c)
-			CUSTOM_CLUSTER_LINE="$OPTARG"
-			;;
-		x)
-			EXCLUDED_HOSTS="$OPTARG"
-			;;
-		\?)
-			echo "error: invalid option -$OPTARG" 1>&2
-			usage 1>&2
-			exit "$ERR_ARG"
-			;;
-		:)
-			echo "error: missing argument for option -$OPTARG" 1>&2
-			usage 1>&2
-			exit "$ERR_ARG"
-			;;
-	esac
+    case $OPT in
+        h)
+            usage
+            exit
+            ;;
+        d)
+            DUMP_HOSTS="true"
+            ;;
+        t)
+            DUMP_TMUX_CMDS="true"
+            ;;
+        c)
+            CUSTOM_CLUSTER_LINE="$OPTARG"
+            ;;
+        x)
+            EXCLUDED_HOSTS="$OPTARG"
+            ;;
+        \?)
+            echo "error: invalid option -$OPTARG" 1>&2
+            usage 1>&2
+            exit "$ERR_ARG"
+            ;;
+        :)
+            echo "error: missing argument for option -$OPTARG" 1>&2
+            usage 1>&2
+            exit "$ERR_ARG"
+            ;;
+    esac
 done
 
 shift $((OPTIND-1))
 
 # check for conficting dump options
 if [ -n "$DUMP_HOSTS" -a -n "$DUMP_TMUX_CMDS" ]; then
-	echo "error: -d and -t options conflict" 1>&2
-	usage 1>&2
-	exit "$ERR_ARG"
+    echo "error: -d and -t options conflict" 1>&2
+    usage 1>&2
+    exit "$ERR_ARG"
 fi
 
 CONF="$HOME/.clusterssh/clusters"
 
 # check for conf file or custom cluster option
 if [ ! -f "$CONF" -a -z "$CUSTOM_CLUSTER_LINE" ]; then
-	echo "error: either config $CONF must exist or -c option must be used" 1>&2
-	usage 1>&2
-	exit "$ERR_ARG"
+    echo "error: either config $CONF must exist or -c option must be used" 1>&2
+    usage 1>&2
+    exit "$ERR_ARG"
 fi
 
 CONF_LINES=""
 
 if [ -f "$CONF" ]; then
-	CONF_LINES="$(grep -Ev '(^#|^$)' "$CONF")"
+    CONF_LINES="$(grep -Ev '(^#|^$)' "$CONF")"
 fi
 
 if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
-	# check for first param
-	if [ -n "$1" ]; then
-		echo "error: passing CLUSTERNAME conflicts with -c option" 1>&2
-		usage 1>&2
-		exit "$ERR_ARG"
-	fi
+    # check for first param
+    if [ -n "$1" ]; then
+        echo "error: passing CLUSTERNAME conflicts with -c option" 1>&2
+        usage 1>&2
+        exit "$ERR_ARG"
+    fi
 
-	# get cluster name
-	CLUSTER="$(echo "$CUSTOM_CLUSTER_LINE" | awk '{print $1}')"
+    # get cluster name
+    CLUSTER="$(echo "$CUSTOM_CLUSTER_LINE" | awk '{print $1}')"
 
-	# check conf for existing cluster of the same name
-	if [ -n "$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")" ]; then
-		echo "error: cluster $CLUSTER specified with -c option exists in config $CONF" 1>&2
-		usage 1>&2
-		exit "$ERR_ARG"
-	fi
+    # check conf for existing cluster of the same name
+    if [ -n "$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")" ]; then
+        echo "error: cluster $CLUSTER specified with -c option exists in config $CONF" 1>&2
+        usage 1>&2
+        exit "$ERR_ARG"
+    fi
 
-	# add custom config line to configuration
-	CONF_LINES="${CONF_LINES}${NL}${CUSTOM_CLUSTER_LINE}${NL}"
+    # add custom config line to configuration
+    CONF_LINES="${CONF_LINES}${NL}${CUSTOM_CLUSTER_LINE}${NL}"
 else
-	# check for first param
-	if [ -z "$1" ]; then
-		usage 1>&2
-		exit "$ERR_ARG"
-	fi
+    # check for first param
+    if [ -z "$1" ]; then
+        usage 1>&2
+        exit "$ERR_ARG"
+    fi
 
-	CLUSTER="$1"
+    CLUSTER="$1"
 fi
 
 # check for cluster in config
 CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
 if [ -z "$CLUSTER_LINE" ]; then
-	echo "error: cluster $CLUSTER not in config $CONF" 1>&2
-	exit "$ERR_ARG"
+    echo "error: cluster $CLUSTER not in config $CONF" 1>&2
+    exit "$ERR_ARG"
 fi
 
 SESSION_NAME="cluster-$CLUSTER"
 
 # check for existing tmux session of the specified cluster
 if [ -z "$DUMP_HOSTS" -a -z "$DUMP_TMUX_CMDS" ]; then
-	if [ -n "$(tmux ls 2>/dev/null | grep "$SESSION_NAME:")" ]; then
-		echo "error: tmux session $SESSION_NAME already exists" 1>&2
-		exit "$ERR_ARG"
-	fi
+    if [ -n "$(tmux ls 2>/dev/null | grep "$SESSION_NAME:")" ]; then
+        echo "error: tmux session $SESSION_NAME already exists" 1>&2
+        exit "$ERR_ARG"
+    fi
 fi
 
 # get hosts from cluster line
@@ -192,9 +192,9 @@ add_cluster_hosts $CLUSTER
 # exclude hosts
 # TODO: allow EXCLUDED_HOSTS to also contain cluster names
 if [ -n "$EXCLUDED_HOSTS" ]; then
-	for HOST in $EXCLUDED_HOSTS; do
-		HOSTS="$(echo "$HOSTS" | sed -r "s/ $HOST( |$)/ /g")"
-	done
+    for HOST in $EXCLUDED_HOSTS; do
+        HOSTS="$(echo "$HOSTS" | sed -r "s/ $HOST( |$)/ /g")"
+    done
 fi
 
 # remove leading space
@@ -202,8 +202,8 @@ HOSTS="$(echo "$HOSTS" | sed 's/^ //')"
 
 # dump hosts
 if [ -n "$DUMP_HOSTS" ]; then
-	echo "$HOSTS"
-	exit
+    echo "$HOSTS"
+    exit
 fi
 
 # build tmux commands
@@ -211,27 +211,27 @@ fi
 HOST="$(echo "$HOSTS" | awk '{print $1}')"
 # remove first host
 if [ "$(echo "$HOSTS" | grep -o ' ' | wc -l)" -gt 0 ]; then
-	HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
+    HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
 else
-	HOSTS=""
+    HOSTS=""
 fi
 
 SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
 TMUX_CMDS="new -d -s \"$SESSION_NAME\" \"$SHELL_CMD\"$NL"
 
 for HOST in $HOSTS; do
-	SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
-	TMUX_CMDS="${TMUX_CMDS}splitw -t \"$SESSION_NAME\" \"$SHELL_CMD\"$NL"
-	TMUX_CMDS="${TMUX_CMDS}select-layout -t \"$SESSION_NAME\" tiled$NL"
+    SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+    TMUX_CMDS="${TMUX_CMDS}splitw -t \"$SESSION_NAME\" \"$SHELL_CMD\"$NL"
+    TMUX_CMDS="${TMUX_CMDS}select-layout -t \"$SESSION_NAME\" tiled$NL"
 done
 
 TMUX_CMDS="${TMUX_CMDS}set-window-option -t \"$SESSION_NAME\" synchronize-panes on$NL"
 
 # if we're inside a tmux client, switch-client, else attach
 if [ -n "$TMUX" ]; then
-	TMUX_CMDS="${TMUX_CMDS}switch-client -t \"$SESSION_NAME\"$NL"
+    TMUX_CMDS="${TMUX_CMDS}switch-client -t \"$SESSION_NAME\"$NL"
 else
-	TMUX_CMDS="${TMUX_CMDS}attach -t \"$SESSION_NAME\"$NL"
+    TMUX_CMDS="${TMUX_CMDS}attach -t \"$SESSION_NAME\"$NL"
 fi
 
 # fix issue with incorrect layout after call to switch-client
@@ -239,8 +239,8 @@ TMUX_CMDS="${TMUX_CMDS}select-layout -t \"$SESSION_NAME\" tiled$NL"
 
 # dump tmux commands
 if [ -n "$DUMP_TMUX_CMDS" ]; then
-	echo -n "$TMUX_CMDS"
-	exit
+    echo -n "$TMUX_CMDS"
+    exit
 fi
 
 TMPFILE="$(mktemp /tmp/tmux-cluster-XXXXXXXXXXXX)"
