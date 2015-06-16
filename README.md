@@ -2,6 +2,8 @@
 
 tmux-cluster is a wrapper script for [tmux](http://tmux.sourceforge.net/) that aims to be fully compatible with [clusterssh](https://github.com/duncs/clusterssh) clusters configs.
 
+It's a handy tool for administering groups (or "clusters") of servers via ssh, all within the comfort of tmux.
+
 tmux-cluster is written in pure shell and only depends on tmux and standard unix utils (grep, sed, awk, cut, etc.).
 
 ### Usage
@@ -28,34 +30,68 @@ tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh
 
 A new session will be created with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized.
 
-You can run tmux-cluster either from outside or inside an attached tmux instance. In either case, tmux-cluster will automatically attach your terminal to the newly created cluster session. You can also use tmux-cluster as a tmux plugin (see the [Installation via tmux plugin manager](#installation-via-tmux-plugin-manager) section).
+Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` that tmux-cluster uses is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line.
 
-Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` used is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line.
+You can run tmux-cluster either from outside or inside an attached tmux instance. In either case, tmux-cluster will automatically attach your terminal to the newly created cluster session.
+
+You can also use tmux-cluster as a tmux plugin (see the [tmux plugin installation](#tmux-plugin-installation) section). When tmux-cluster is installed as a plugin, you can type `prefix + C` to pop open a custom tmux prompt with which to lauch clusters. Anything you type in the prompt will be passed directly to the `tmc` script.
 
 ### Installation
 
-There are two ways to install tmux-cluster. You can do so manually or through the [tmux plugin manager](https://github.com/tmux-plugins/tpm).
+There are two ways to install tmux-cluster. You can install it as a stand-alone command line utility or as a tmux plugin. Note that even if you install tmux-cluster as a tmux plugin, you can still use it on the command line if desired.
 
-#### Manual installation
+#### Command line only installation
 
 1. Clone this repository: `git clone https://github.com/davidscholberg/tmux-cluster`
-1. Optionally copy or symlink the `tmc` script into a directory in your `$PATH`.
+1. Optionally copy or [symlink the tmc script](#symlink-the-tmc-script) into a directory in your `$PATH`.
 
-#### Installation via tmux plugin manager
+#### Tmux plugin installation
+
+You may either install the tmux plugin manually or through the [tmux plugin manager](https://github.com/tmux-plugins/tpm).
+
+##### Manual plugin installation
+
+1. Clone this repository: `git clone https://github.com/davidscholberg/tmux-cluster`
+1. Add the following to your `~/.tmux.conf`: `run-shell /path/to/tmux-cluster/tmc.tmux`
+1. Reload your tmux config.
+1. Optionally [configure the plugin](#plugin-configuration).
+1. Optionally copy or [symlink the tmc script](#symlink-the-tmc-script)into a directory in your `$PATH`.
+
+##### Installation via tmux plugin manager
 
 1. Ensure that [tmux plugin manager](https://github.com/tmux-plugins/tpm) is installed.
 1. Add `davidscholberg/tmux-cluster` to your list of tmux plugins and install it with `prefix + I`.
-1. Optionally configure a tmux keybinding for tmux-cluster using the `@tmux_cluster_prompt_key` option in your `~/.tmux/conf` file.
-  * E.g. `set-option -g @tmux_cluster_prompt_key Q`
-  * If this option is not specified, `C` is the default.
-1. To use this plugin, open a tmux-cluster prompt with `prefix + C` (or whatever you specified in `@tmux_cluster_prompt_key`), and type the name of the cluster you want to launch.
-1. Optionally copy or symlink the `tmc` script into a directory in your `$PATH` if you want to be able to run `tmc` on the command line.
+1. Optionally [configure the plugin](#plugin-configuration).
+1. Optionally copy or [symlink the tmc script](#symlink-the-tmc-script) into a directory in your `$PATH`.
+  * The tmux plugin manager will clone tmux-cluster into this directory: `~/.tmux/plugins/tmux-cluster/`
+
+##### Symlink the tmc script
+
+You may optionally symlink the `tmc` script into a directory in your `$PATH` if you want to be able to run `tmc` on the command line from anywhere.
+
+If your `~/bin` directory is in your `$PATH`, then you can create the symlink as follows:
+
+```
+ln -s /path/to/tmux-cluster/tmc ~/bin/
+```
+
+##### Plugin configuration
+
+By default, the tmux-cluster plugin uses the keybinding `prefix + C` to open a prompt through which to launch clusters, but you may optionally configure a custom keybinding using the `@tmux_cluster_prompt_key` option in your `~/.tmux/conf` file.
+
+For example:
+
+```
+set-option -g @tmux_cluster_prompt_key X
+```
+
+Be sure to reload your tmux config.
 
 ### Why tmux-cluster?
 
 Question: Why does tmux-cluster exist? There are boatloads of clusterssh tmux wrappers out there already.
 
-Answer: [Configuration](#configuration), [session handling](#session-handling), [error reporting](#error-reporting), and [performance](#performance).
+Answer: [Configuration](#configuration), [session handling](#session-handling), [error reporting](#error-reporting), [performance](#performance), and [tmux plugin support](#tmux-plugin-support).
 
 #### Configuration
 
@@ -100,6 +136,10 @@ tmux-cluster will alert you of every single host that failed to connect by holdi
 #### Performance
 
 tmux-cluster should perform faster than most of the clusterssh tmux wrappers out there because of how tmux-cluster passes tmux commands to tmux. Most other clusterssh tmux wrappers make individual calls to tmux for every single tmux command that needs to be run. tmux-cluster, on the other hand, makes a list of native tmux commands first, places this list of commands into a temporary file, and then passes these commands to tmux with a single call to tmux's `source-file` command. This makes tmux-cluster very fast, even if you have much more than a handful of hosts in a particular cluster.
+
+#### Tmux plugin support
+
+tmux-cluster is available as a tmux plugin, making it very easy to install and use. See the [tmux plugin installation](#tmux-plugin-installation) section for more information.
 
 ### TODO
 
