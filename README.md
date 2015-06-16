@@ -28,9 +28,9 @@ Options:
 
 tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh/clusters`. See the [configuration](#configuration) section for more info on the configuration syntax.
 
-A new session will be created with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized.
+Running `tmc CLUSTERNAME` will create a new session with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized.
 
-Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` that tmux-cluster uses is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line.
+You may also create cluster sessions using the `-c` option (e.g. `tmc -c "test-cluster host1 host2"`). Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` that tmux-cluster uses is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line. The [configuration](#configuration) section has more info on the configuration syntax.
 
 You can run tmux-cluster either from outside or inside an attached tmux instance. In either case, tmux-cluster will automatically attach your terminal to the newly created cluster session.
 
@@ -67,7 +67,7 @@ You may either install the tmux plugin manually or through the [tmux plugin mana
 
 ##### Plugin configuration
 
-By default, the tmux-cluster plugin uses the keybinding `prefix + C` to open a prompt through which to launch clusters, but you may optionally configure a custom keybinding using the `@tmux_cluster_prompt_key` option in your `~/.tmux/conf` file.
+By default, the tmux-cluster plugin uses the keybinding `prefix + C` to open a prompt through which to pass arguments to the `tmc` script, but you may optionally configure a custom keybinding using the `@tmux_cluster_prompt_key` option in your `~/.tmux/conf` file.
 
 For example:
 
@@ -79,7 +79,7 @@ Be sure to reload your tmux config.
 
 #### Symlink the tmc script
 
-You may optionally symlink the `tmc` script into a directory in your `$PATH` if you want to be able to run `tmc` on the command line from anywhere.
+You may optionally symlink the `tmc` script into a directory in your `$PATH` if you want to be able to run `tmc` on the command line from anywhere. The advantage of symlinking is that when you `git pull` the latest changes, the symlink will already point to the updated `tmc` script.
 
 If your `~/bin` directory is in your `$PATH`, then you can create the symlink as follows:
 
