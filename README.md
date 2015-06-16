@@ -52,10 +52,10 @@ You may either install the tmux plugin manually or through the [tmux plugin mana
 ##### Manual plugin installation
 
 1. Clone this repository: `git clone https://github.com/davidscholberg/tmux-cluster`
-1. Add the following to your `~/.tmux.conf`: `run-shell /path/to/tmux-cluster/tmc.tmux`
+1. Add the following to your `~/.tmux.conf` file: `run-shell /path/to/tmux-cluster/tmc.tmux`
 1. Reload your tmux config.
 1. Optionally [configure the plugin](#plugin-configuration).
-1. Optionally copy or [symlink the tmc script](#symlink-the-tmc-script)into a directory in your `$PATH`.
+1. Optionally copy or [symlink the tmc script](#symlink-the-tmc-script) into a directory in your `$PATH`.
 
 ##### Installation via tmux plugin manager
 
@@ -63,17 +63,7 @@ You may either install the tmux plugin manually or through the [tmux plugin mana
 1. Add `davidscholberg/tmux-cluster` to your list of tmux plugins and install it with `prefix + I`.
 1. Optionally [configure the plugin](#plugin-configuration).
 1. Optionally copy or [symlink the tmc script](#symlink-the-tmc-script) into a directory in your `$PATH`.
-  * The tmux plugin manager will clone tmux-cluster into this directory: `~/.tmux/plugins/tmux-cluster/`
-
-##### Symlink the tmc script
-
-You may optionally symlink the `tmc` script into a directory in your `$PATH` if you want to be able to run `tmc` on the command line from anywhere.
-
-If your `~/bin` directory is in your `$PATH`, then you can create the symlink as follows:
-
-```
-ln -s /path/to/tmux-cluster/tmc ~/bin/
-```
+  * The tmux plugin manager automatically clones tmux-cluster into this directory: `~/.tmux/plugins/tmux-cluster/`
 
 ##### Plugin configuration
 
@@ -87,11 +77,21 @@ set-option -g @tmux_cluster_prompt_key X
 
 Be sure to reload your tmux config.
 
+#### Symlink the tmc script
+
+You may optionally symlink the `tmc` script into a directory in your `$PATH` if you want to be able to run `tmc` on the command line from anywhere.
+
+If your `~/bin` directory is in your `$PATH`, then you can create the symlink as follows:
+
+```
+ln -s /path/to/tmux-cluster/tmc ~/bin/
+```
+
 ### Why tmux-cluster?
 
 Question: Why does tmux-cluster exist? There are boatloads of clusterssh tmux wrappers out there already.
 
-Answer: [Configuration](#configuration), [session handling](#session-handling), [error reporting](#error-reporting), [performance](#performance), and [tmux plugin support](#tmux-plugin-support).
+Answer: [Configuration](#configuration), [session handling](#session-handling), [error reporting](#error-reporting), [performance](#performance), and [flexible usage](#flexible-usage).
 
 #### Configuration
 
@@ -137,9 +137,9 @@ tmux-cluster will alert you of every single host that failed to connect by holdi
 
 tmux-cluster should perform faster than most of the clusterssh tmux wrappers out there because of how tmux-cluster passes tmux commands to tmux. Most other clusterssh tmux wrappers make individual calls to tmux for every single tmux command that needs to be run. tmux-cluster, on the other hand, makes a list of native tmux commands first, places this list of commands into a temporary file, and then passes these commands to tmux with a single call to tmux's `source-file` command. This makes tmux-cluster very fast, even if you have much more than a handful of hosts in a particular cluster.
 
-#### Tmux plugin support
+#### Flexible usage
 
-tmux-cluster is available as a tmux plugin, making it very easy to install and use. See the [tmux plugin installation](#tmux-plugin-installation) section for more information.
+tmux-cluster will work fine whether you run it from inside or outside a running tmux instance. Additionally, tmux-cluster is available as a tmux plugin, making it very easy to install and use. See the [tmux plugin installation](#tmux-plugin-installation) section for more information.
 
 ### TODO
 
