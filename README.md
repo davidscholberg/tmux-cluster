@@ -145,6 +145,7 @@ tmux-cluster will work fine whether you run it from inside or outside a running 
 
 * Add usage examples to README.
 * Add ability to resolve cluster names in the EXCLUDES list.
+* Add command line option to create the cluster panes in a new window in an existing session.
 * Add command line option to start a local login shell after ssh exits.
 * Add command line option to exclude current host from cluster.
 * Add command line option to specify unique suffix to append to session name to allow multiple sessions of the same cluster. Could default to appending 4 digit number.
