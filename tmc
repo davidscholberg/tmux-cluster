@@ -43,6 +43,8 @@ Options:
                             clusters config.
     -x EXCLUDES     Space-separated list of hosts to exclude from cluster.
                         The hosts in EXCLUDES will not be connected to.
+    -w              Create cluster panes in a new window in the current session.
+                        Only valid if used in an attached tmux session.
 EOF
 }
 
@@ -85,9 +87,10 @@ DUMP_HOSTS=""
 DUMP_TMUX_CMDS=""
 CUSTOM_CLUSTER_LINE=""
 EXCLUDED_HOSTS=""
+USE_EXISTING_SESSION=""
 
 # parse args
-while getopts :hdtc:x: OPT; do
+while getopts :hdtc:x:w OPT; do
     case $OPT in
         h)
             usage
@@ -105,6 +108,9 @@ while getopts :hdtc:x: OPT; do
         x)
             EXCLUDED_HOSTS="$OPTARG"
             ;;
+        w)
+            USE_EXISTING_SESSION="true"
+            ;;
         \?)
             echo "error: invalid option -$OPTARG" 1>&2
             usage 1>&2
@@ -119,6 +125,14 @@ while getopts :hdtc:x: OPT; do
 done
 
 shift $((OPTIND-1))
+
+# if -w option is used, make sure we're in tmux
+if [ "$USE_EXISTING_SESSION" = "true" -a -z "$TMUX" ]; then
+    MSG="error: -w option must be used in an attached tmux session"
+    echo "$MSG" 1>&2
+    usage 1>&2
+    exit "$ERR_ARG"
+fi
 
 # check for conficting dump options
 if [ -n "$DUMP_HOSTS" -a -n "$DUMP_TMUX_CMDS" ]; then
@@ -179,13 +193,18 @@ if [ -z "$CLUSTER_LINE" ]; then
     exit "$ERR_ARG"
 fi
 
-SESSION_NAME="cluster-$CLUSTER"
+SESSION_NAME=""
+# set session name
+if [ -z "$USE_EXISTING_SESSION" ]; then
+    SESSION_NAME="cluster-$CLUSTER"
 
-# check for existing tmux session of the specified cluster
-if [ -z "$DUMP_HOSTS" -a -z "$DUMP_TMUX_CMDS" ]; then
-    if [ -n "$(tmux ls 2>/dev/null | grep "$SESSION_NAME:")" ]; then
-        echo "error: tmux session $SESSION_NAME already exists" 1>&2
-        exit "$ERR_ARG"
+    # check for existing tmux session of the specified cluster
+    if [ -z "$DUMP_HOSTS" -a -z "$DUMP_TMUX_CMDS" ]; then
+        # TODO: update to use has-session tmux command
+        if [ -n "$(tmux ls 2>/dev/null | grep "$SESSION_NAME:")" ]; then
+            echo "error: tmux session $SESSION_NAME already exists" 1>&2
+            exit "$ERR_ARG"
+        fi
     fi
 fi
 
@@ -233,25 +252,33 @@ if [ -n "$TMUX" ]; then
     TMUX_WINDOW_XY_ARGS="-x $TMUX_WINDOW_X -y $TMUX_WINDOW_Y"
 fi
 
-TMUX_CMDS="new -d $TMUX_WINDOW_XY_ARGS -s \"$SESSION_NAME\" \"$SHELL_CMD\"$NL"
+TMUX_SESSION_S_ARG=""
+TMUX_SESSION_T_ARG=""
+if [ "$USE_EXISTING_SESSION" = "true" ]; then
+    TMUX_CMDS="neww \"$SHELL_CMD\"$NL"
+else
+    TMUX_SESSION_S_ARG="-s \"$SESSION_NAME\""
+    TMUX_SESSION_T_ARG="-t \"$SESSION_NAME\""
+    TMUX_CMDS="new -d $TMUX_WINDOW_XY_ARGS $TMUX_SESSION_S_ARG \"$SHELL_CMD\"$NL"
+fi
 
 for HOST in $HOSTS; do
     SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
-    TMUX_CMDS="${TMUX_CMDS}splitw -t \"$SESSION_NAME\" \"$SHELL_CMD\"$NL"
-    TMUX_CMDS="${TMUX_CMDS}select-layout -t \"$SESSION_NAME\" tiled$NL"
+    TMUX_CMDS="${TMUX_CMDS}splitw $TMUX_SESSION_T_ARG \"$SHELL_CMD\"$NL"
+    TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG tiled$NL"
 done
 
-TMUX_CMDS="${TMUX_CMDS}set-window-option -t \"$SESSION_NAME\" synchronize-panes on$NL"
+TMUX_CMDS="${TMUX_CMDS}set-window-option $TMUX_SESSION_T_ARG synchronize-panes on$NL"
 
 # if we're inside a tmux client, switch-client, else attach
 if [ -n "$TMUX" ]; then
-    TMUX_CMDS="${TMUX_CMDS}switch-client -t \"$SESSION_NAME\"$NL"
+    TMUX_CMDS="${TMUX_CMDS}switch-client $TMUX_SESSION_T_ARG$NL"
 else
-    TMUX_CMDS="${TMUX_CMDS}attach -t \"$SESSION_NAME\"$NL"
+    TMUX_CMDS="${TMUX_CMDS}attach $TMUX_SESSION_T_ARG$NL"
 fi
 
 # fix issue with incorrect layout after call to switch-client
-TMUX_CMDS="${TMUX_CMDS}select-layout -t \"$SESSION_NAME\" tiled$NL"
+TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG tiled$NL"
 
 # dump tmux commands
 if [ -n "$DUMP_TMUX_CMDS" ]; then

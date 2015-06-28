@@ -24,6 +24,8 @@ Options:
                             clusters config.
     -x EXCLUDES     Space-separated list of hosts to exclude from cluster.
                         The hosts in EXCLUDES will not be connected to.
+    -w              Create cluster panes in a new window in the current session.
+                        Only valid if used in an attached tmux session.
 ```
 
 tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh/clusters`. See the [configuration](#configuration) section for more info on the configuration syntax.
@@ -145,7 +147,7 @@ tmux-cluster will work fine whether you run it from inside or outside a running 
 
 * Add usage examples to README.
 * Add ability to resolve cluster names in the EXCLUDES list.
-* Add command line option to create the cluster panes in a new window in an existing session.
+* Add command line option to override the session name to use. If the session already exists, then the cluster panes would be created in a new window in that session.
 * Add command line option to start a local login shell after ssh exits.
 * Add command line option to exclude current host from cluster.
 * Add command line option to specify unique suffix to append to session name to allow multiple sessions of the same cluster. Could default to appending 4 digit number.
