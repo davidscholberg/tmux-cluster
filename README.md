@@ -1,6 +1,6 @@
 ## tmux-cluster
 
-tmux-cluster is a wrapper script for [tmux](http://tmux.sourceforge.net/) that aims to be fully compatible with [clusterssh](https://github.com/duncs/clusterssh) clusters configs.
+tmux-cluster is a wrapper script for [tmux](http://tmux.github.io/) that aims to be fully compatible with [clusterssh](https://github.com/duncs/clusterssh) clusters configs.
 
 It's a handy tool for administering groups (or "clusters") of servers via ssh, all within the comfort of tmux.
 
