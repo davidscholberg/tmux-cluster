@@ -272,7 +272,11 @@ TMUX_CMDS="${TMUX_CMDS}set-window-option $TMUX_SESSION_T_ARG synchronize-panes o
 
 # if we're inside a tmux client, switch-client, else attach
 if [ -n "$TMUX" ]; then
-    TMUX_CMDS="${TMUX_CMDS}switch-client $TMUX_SESSION_T_ARG$NL"
+    # only switch client if we created a new session
+    # if using an existing session, we're already in the new window
+    if [ -z "$USE_EXISTING_SESSION" ]; then
+        TMUX_CMDS="${TMUX_CMDS}switch-client $TMUX_SESSION_T_ARG$NL"
+    fi
 else
     TMUX_CMDS="${TMUX_CMDS}attach $TMUX_SESSION_T_ARG$NL"
 fi
