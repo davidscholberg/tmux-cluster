@@ -293,5 +293,5 @@ fi
 TMPFILE="$(mktemp /tmp/tmux-cluster-XXXXXXXXXXXX)"
 
 echo "$TMUX_CMDS" > "$TMPFILE"
-tmux source-file "$TMPFILE"
+tmux start-server \; source-file "$TMPFILE"
 rm "$TMPFILE"
