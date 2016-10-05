@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Copyright 2015 David Scholberg <recombinant.vector@gmail.com>
+
+# This file is part of tmux-cluster.
+#
+# tmux-cluster is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# tmux-cluster is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with tmux-cluster.  If not, see <http://www.gnu.org/licenses/>.
+
+#Tab completion function.
+_tmc_complete() {
+   local cur opts
+   cur="${COMP_WORDS[COMP_CWORD]}"
+   opts=$(awk -F ' ' '/^[^#]/ {print $2}' "$HOME/.clusterssh/clusters")
+   COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
+}
+complete -o nospace -F _tmc_complete tmc
