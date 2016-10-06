@@ -19,9 +19,17 @@
 
 #Tab completion function.
 _tmc_complete() {
-   local cur opts
+   local cur prev opts
    cur="${COMP_WORDS[COMP_CWORD]}"
-   opts=$(awk -F ' ' '/^[^#]/ {print $2}' "$HOME/.clusterssh/clusters")
+   prev="${COMP_WORDS[COMP_CWORD-1]}"
+   case $prev in
+      -h|-c|-x)
+         return
+         ;;
+      tmc|-t|-d|-w)
+         opts=$(awk -F ' ' '/^[^#]/ {print $2}' "$HOME/.clusterssh/clusters")
+         ;;
+   esac
    COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
 }
 complete -o nospace -F _tmc_complete tmc
