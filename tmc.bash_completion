@@ -27,7 +27,7 @@ _tmc_complete() {
          return
          ;;
       tmc|-t|-d|-w)
-         opts=$(awk -F ' ' '/^[^#]/ {print $2}' "$HOME/.clusterssh/clusters")
+         opts=$(awk -F ' ' '/^[^#]/ {print $1}' "$HOME/.clusterssh/clusters")
          ;;
    esac
    COMPREPLY=($(compgen -W "${opts}" -- "$cur"))
