@@ -45,6 +45,7 @@ Options:
                         The hosts in EXCLUDES will not be connected to.
     -w              Create cluster panes in a new window in the current session.
                         Only valid if used in an attached tmux session.
+    -n              Disable initial pane syncronization.
 EOF
 }
 
@@ -90,7 +91,7 @@ EXCLUDED_HOSTS=""
 USE_EXISTING_SESSION=""
 
 # parse args
-while getopts :hdtc:x:w OPT; do
+while getopts :hdtnc:x:w OPT; do
     case $OPT in
         h)
             usage
@@ -110,6 +111,9 @@ while getopts :hdtc:x:w OPT; do
             ;;
         w)
             USE_EXISTING_SESSION="true"
+            ;;
+        n)
+            NO_SYNC_PANES="true"
             ;;
         \?)
             echo "error: invalid option -$OPTARG" 1>&2
@@ -268,7 +272,11 @@ for HOST in $HOSTS; do
     TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG tiled$NL"
 done
 
-TMUX_CMDS="${TMUX_CMDS}set-window-option $TMUX_SESSION_T_ARG synchronize-panes on$NL"
+if [ -z "$NO_SYNC_PANES" ]; then
+    TMUX_CMDS="${TMUX_CMDS}set-window-option $TMUX_SESSION_T_ARG synchronize-panes on $NL"
+else
+    TMUX_CMD=""
+fi
 
 # if we're inside a tmux client, switch-client, else attach
 if [ -n "$TMUX" ]; then
