@@ -26,9 +26,10 @@ Options:
                         The hosts in EXCLUDES will not be connected to.
     -w              Create cluster panes in a new window in the current session.
                         Only valid if used in an attached tmux session.
+    -f              Specify location for clusterssh config file
 ```
 
-tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh/clusters`. See the [configuration](#configuration) section for more info on the configuration syntax.
+tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh/clusters` by default. You can specify an alternate path to clusterssh config by using the `-f` option. See the [configuration](#configuration) section for more info on the configuration syntax.
 
 Running `tmc CLUSTERNAME` will create a new session with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized.
 

@@ -45,6 +45,7 @@ Options:
                         The hosts in EXCLUDES will not be connected to.
     -w              Create cluster panes in a new window in the current session.
                         Only valid if used in an attached tmux session.
+    -f PATH         Specify a path to clusterssh config to use.
 EOF
 }
 
@@ -90,7 +91,7 @@ EXCLUDED_HOSTS=""
 USE_EXISTING_SESSION=""
 
 # parse args
-while getopts :hdtc:x:w OPT; do
+while getopts :hdtc:f:x:w OPT; do
     case $OPT in
         h)
             usage
@@ -110,6 +111,9 @@ while getopts :hdtc:x:w OPT; do
             ;;
         w)
             USE_EXISTING_SESSION="true"
+            ;;
+        f)
+            CUSTOM_CLUSTERSSH_CONFIG="$OPTARG"
             ;;
         \?)
             echo "error: invalid option -$OPTARG" 1>&2
@@ -141,7 +145,11 @@ if [ -n "$DUMP_HOSTS" -a -n "$DUMP_TMUX_CMDS" ]; then
     exit "$ERR_ARG"
 fi
 
+# Determine if using default config or alternate location
 CONF="$HOME/.clusterssh/clusters"
+if [ ! -z "$CUSTOM_CLUSTERSSH_CONFIG" -a -f "$CUSTOM_CLUSTERSSH_CONFIG" ]; then
+    CONF="$CUSTOM_CLUSTERSSH_CONFIG"
+fi
 
 # check for conf file or custom cluster option
 if [ ! -f "$CONF" -a -z "$CUSTOM_CLUSTER_LINE" ]; then
