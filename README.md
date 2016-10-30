@@ -27,11 +27,12 @@ Options:
     -w              Create cluster panes in a new window in the current session.
                         Only valid if used in an attached tmux session.
     -s              Open a shell in disconnected windows, instead of closing.
+    -n              Disable initial pane syncronization.
 ```
 
 tmux-cluster will look for your clusterssh clusters config at `$HOME/.clusterssh/clusters`. See the [configuration](#configuration) section for more info on the configuration syntax.
 
-Running `tmc CLUSTERNAME` will create a new session with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized.
+Running `tmc CLUSTERNAME` will create a new session with the name `cluster-CLUSTERNAME`. All of the hosts specified by `CLUSTERNAME` will be in a single window with a tiled layout, and the panes will be synchronized unless the `-n` option is passed.
 
 You may also create cluster sessions using the `-c` option (e.g. `tmc -c "test-cluster host1 host2"`). Note that if the `-c` option is used, then passing `CLUSTERNAME` is invalid; the `CLUSTERNAME` that tmux-cluster uses is the first element of `CLUSTERLINE`, since `CLUSTERLINE` is treated exactly as a clusters config line. The [configuration](#configuration) section has more info on the configuration syntax.
 
@@ -153,7 +154,6 @@ tmux-cluster will work fine whether you run it from inside or outside a running 
 * Add command line option to specify unique suffix to append to session name to allow multiple sessions of the same cluster. Could default to appending 4 digit number.
 * Add ability to specify multiple clusters on command line, each one creating a different session.
 * Add command line option to specify a different pane layout to use instead of the default `tiled` layout.
-* Add command line option to disable pane synchronization.
 * Add command line option to specify path to clusterssh config.
 * Make tmux-cluster match clusterssh's behavior of using the "default" cluster if no cluster is specified.
 * Add command line option to specify path to custom ssh config.
