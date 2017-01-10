@@ -45,6 +45,8 @@ Options:
                         The hosts in EXCLUDES will not be connected to.
     -w              Create cluster panes in a new window in the current session.
                         Only valid if used in an attached tmux session.
+    -s              Open a shell in disconnected windows, instead of closing.
+    -n              Disable initial pane syncronization.
 EOF
 }
 
@@ -90,7 +92,7 @@ EXCLUDED_HOSTS=""
 USE_EXISTING_SESSION=""
 
 # parse args
-while getopts :hdtc:x:w OPT; do
+while getopts :hdtsnc:x:w OPT; do
     case $OPT in
         h)
             usage
@@ -110,6 +112,12 @@ while getopts :hdtc:x:w OPT; do
             ;;
         w)
             USE_EXISTING_SESSION="true"
+            ;;
+	s)
+	    SHELL_AFTER_DISCONNECT="true"
+            ;;
+        n)
+            NO_SYNC_PANES="true"
             ;;
         \?)
             echo "error: invalid option -$OPTARG" 1>&2
@@ -240,7 +248,12 @@ else
     HOSTS=""
 fi
 
-SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+if [ -z "$SHELL_AFTER_DISCONNECT" ]; then
+	SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+else
+	SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to start a local shell; read enter; $SHELL)"
+fi
+
 
 # if we're running in tmux, get dimensions of the current window
 # this is needed if tmc is run inside run-shell, since the default window size is 80x24
@@ -263,12 +276,21 @@ else
 fi
 
 for HOST in $HOSTS; do
-    SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+    # TODO: Avoid repeating this if/else by refactoring the way SHELL_CMD is formed
+    if [ -z "$SHELL_AFTER_DISCONNECT" ]; then
+        SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+    else
+        SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to start a local shell; read enter; $SHELL)"
+    fi
     TMUX_CMDS="${TMUX_CMDS}splitw $TMUX_SESSION_T_ARG \"$SHELL_CMD\"$NL"
     TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG tiled$NL"
 done
 
-TMUX_CMDS="${TMUX_CMDS}set-window-option $TMUX_SESSION_T_ARG synchronize-panes on$NL"
+if [ -z "$NO_SYNC_PANES" ]; then
+    TMUX_CMDS="${TMUX_CMDS}set-window-option $TMUX_SESSION_T_ARG synchronize-panes on $NL"
+else
+    TMUX_CMD=""
+fi
 
 # if we're inside a tmux client, switch-client, else attach
 if [ -n "$TMUX" ]; then
