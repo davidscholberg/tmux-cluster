@@ -45,6 +45,9 @@ Options:
                         The hosts in EXCLUDES will not be connected to.
     -w              Create cluster panes in a new window in the current session.
                         Only valid if used in an attached tmux session.
+    -l LAYOUT       Select a tmux layout.
+    -H              Use even-horizontal tmux layout.
+    -V              Use even-vertical tmux layout.
 EOF
 }
 
@@ -88,9 +91,10 @@ DUMP_TMUX_CMDS=""
 CUSTOM_CLUSTER_LINE=""
 EXCLUDED_HOSTS=""
 USE_EXISTING_SESSION=""
+LAYOUT="tiled"
 
 # parse args
-while getopts :hdtc:x:w OPT; do
+while getopts :hdtc:x:wHVl: OPT; do
     case $OPT in
         h)
             usage
@@ -110,6 +114,15 @@ while getopts :hdtc:x:w OPT; do
             ;;
         w)
             USE_EXISTING_SESSION="true"
+            ;;
+        H)
+            LAYOUT="even-horizontal"
+            ;;
+        V)
+            LAYOUT="even-vertical"
+            ;;
+        l)
+            LAYOUT="$OPTARG"
             ;;
         \?)
             echo "error: invalid option -$OPTARG" 1>&2
@@ -277,7 +290,7 @@ fi
 for HOST in $HOSTS; do
     SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
     TMUX_CMDS="${TMUX_CMDS}splitw $TMUX_SESSION_T_ARG \"$SHELL_CMD\"$NL"
-    TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG tiled$NL"
+    TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG $LAYOUT$NL"
 done
 
 TMUX_CMDS="${TMUX_CMDS}set-window-option $TMUX_SESSION_T_ARG synchronize-panes on$NL"
@@ -294,7 +307,7 @@ else
 fi
 
 # fix issue with incorrect layout after call to switch-client
-TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG tiled$NL"
+TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG $LAYOUT$NL"
 
 # dump tmux commands
 if [ -n "$DUMP_TMUX_CMDS" ]; then
