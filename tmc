@@ -142,18 +142,23 @@ if [ -n "$DUMP_HOSTS" -a -n "$DUMP_TMUX_CMDS" ]; then
 fi
 
 CONF="$HOME/.clusterssh/clusters"
+CONF_TAGS="$HOME/.clusterssh/tags"
 
 # check for conf file or custom cluster option
-if [ ! -f "$CONF" -a -z "$CUSTOM_CLUSTER_LINE" ]; then
-    echo "error: either config $CONF must exist or -c option must be used" 1>&2
+if [ ! -f "$CONF" -a ! -f "$CONF_TAGS" -a -z "$CUSTOM_CLUSTER_LINE" ]; then
+    echo "error: either config $CONF or $CONF_TAGS must exist or -c option must be used" 1>&2
     usage 1>&2
     exit "$ERR_ARG"
 fi
 
 CONF_LINES=""
+CONF_TAGS_LINES=""
 
 if [ -f "$CONF" ]; then
     CONF_LINES="$(grep -Ev '(^#|^$)' "$CONF")"
+fi
+if [ -f "$CONF_TAGS" ]; then
+    CONF_TAGS_LINES="$(grep -Ev '(^#|^$)' "$CONF_TAGS")"
 fi
 
 if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
@@ -189,8 +194,15 @@ fi
 # check for cluster in config
 CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
 if [ -z "$CLUSTER_LINE" ]; then
-    echo "error: cluster $CLUSTER not in config $CONF" 1>&2
-    exit "$ERR_ARG"
+    CLUSTER_LINE="$(echo "$CONF_TAGS_LINES" | grep -E "^[^\s]+.*\s${CLUSTER}(\s|\$)" | sed 's/\s.*//' | tr '\n' ' ')"
+    if [ -z "$CLUSTER_LINE" ]; then
+        echo "error: cluster $CLUSTER not in config $CONF" 1>&2
+        exit "$ERR_ARG"
+    else
+        CLUSTER_LINE="$CLUSTER ${CLUSTER_LINE% }"
+        # add custom config line to configuration
+        CONF_LINES="${CONF_LINES}${NL}${CLUSTER_LINE}${NL}"
+    fi
 fi
 
 SESSION_NAME=""
