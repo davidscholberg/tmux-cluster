@@ -54,9 +54,19 @@ add_cluster_hosts() {
     local CLUSTER="$1"
 
     # check for cluster in config
-    local CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
+    local CLUSTER_LINE="$(echo "$CONF_LINES" | grep "^$CLUSTER ")"
     if [ -z "$CLUSTER_LINE" ]; then
-        HOSTS="$HOSTS $CLUSTER"
+        if echo "$CLUSTER" | grep -q "{.*}"; then
+            if command -v bash > /dev/null; then
+                EXPANDED_HOSTS=$(exec bash -c "echo $CLUSTER")
+                HOSTS="$HOSTS $EXPANDED_HOSTS"
+            else
+                echo "Bash shell must be installed to use hosts with brace expansions: $CLUSTER" >&2
+                exit 1
+            fi
+        else
+            HOSTS="$HOSTS $CLUSTER"
+        fi
     else
         SEEN_CLUSTERS="$SEEN_CLUSTERS $CLUSTER"
 
@@ -64,7 +74,7 @@ add_cluster_hosts() {
         local CLUSTER_LINE_HOSTS="$(echo "$CLUSTER_LINE" | cut -f 2- -d ' ')"
 
         for HOST in $CLUSTER_LINE_HOSTS; do
-            if [ -z "$(echo "$HOSTS" | grep -E " $HOST( |$)")" -a -z "$(echo "$SEEN_CLUSTERS" | grep -E " $HOST( |$)")" ]; then
+            if [ -z "$(echo "$HOSTS" | grep " $HOST( |$)")" -a -z "$(echo "$SEEN_CLUSTERS" | grep " $HOST( |$)")" ]; then
                 add_cluster_hosts "$HOST"
             fi
         done
@@ -74,7 +84,7 @@ add_cluster_hosts() {
 
 # get dimensions of current tmux window
 get_current_tmux_window_dimesions() {
-    echo "$(tmux list-windows | grep -E '[0-9]+: \w+\*' | sed -r 's/^.+\[([0-9]+x[0-9]+)\].+$/\1/')"
+    echo "$(tmux list-windows | grep '[0-9]+: \w+\*' | sed -r 's/^.+\[([0-9]+x[0-9]+)\].+$/\1/')"
 }
 
 # check if tmux is in PATH
@@ -153,7 +163,7 @@ fi
 CONF_LINES=""
 
 if [ -f "$CONF" ]; then
-    CONF_LINES="$(grep -Ev '(^#|^$)' "$CONF")"
+    CONF_LINES="$(grep -v '(^#|^$)' "$CONF")"
 fi
 
 if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
@@ -168,7 +178,7 @@ if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
     CLUSTER="$(echo "$CUSTOM_CLUSTER_LINE" | awk '{print $1}')"
 
     # check conf for existing cluster of the same name
-    if [ -n "$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")" ]; then
+    if [ -n "$(echo "$CONF_LINES" | grep "^$CLUSTER ")" ]; then
         echo "error: cluster $CLUSTER specified with -c option exists in config $CONF" 1>&2
         usage 1>&2
         exit "$ERR_ARG"
@@ -187,7 +197,7 @@ else
 fi
 
 # check for cluster in config
-CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
+CLUSTER_LINE="$(echo "$CONF_LINES" | grep "^$CLUSTER ")"
 if [ -z "$CLUSTER_LINE" ]; then
     echo "error: cluster $CLUSTER not in config $CONF" 1>&2
     exit "$ERR_ARG"

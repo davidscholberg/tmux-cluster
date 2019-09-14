@@ -109,6 +109,13 @@ cluster1 host1 host2 host3
 
 # second cluster, consisting of all hosts from first cluster as well as host4 and host5
 cluster2 cluster1 host4 host5
+
+# if you have the bash shell installed, you can also use expansion macros/brace expansion
+# the following will consist of host08, host09, host10, and host11
+cluster3 host{08..11}
+
+# and this will create a cluster consisting of user@hosta, user@hostb, and user@hostc
+cluster4 user@host{a,b,c}
 ```
 
 [lowens/tmux-cssh](https://github.com/lowens/tmux-cssh) seems to support clusterssh clusters files, but (as of this writing) it doesn't seem to support using cluster names inside other cluster definitions for building cluster hierarchies.
