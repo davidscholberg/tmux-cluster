@@ -240,7 +240,10 @@ else
     HOSTS=""
 fi
 
-SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+IFS=':' read -r -a HOSTA <<< "$HOST"
+PORT="${HOSTA[1]:-22}"
+SHELL_CMD="ssh ${HOSTA[0]} -p ${PORT}; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+#SHELL_CMD="ssh2 $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
 
 # if we're running in tmux, get dimensions of the current window
 # this is needed if tmc is run inside run-shell, since the default window size is 80x24
@@ -263,7 +266,10 @@ else
 fi
 
 for HOST in $HOSTS; do
-    SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+    IFS=':' read -r -a HOSTA <<< "$HOST"
+    PORT="${HOSTA[1]:-22}"
+    SHELL_CMD="ssh ${HOSTA[0]} -p ${PORT}; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
+    #echo $SHELL_CMD
     TMUX_CMDS="${TMUX_CMDS}splitw $TMUX_SESSION_T_ARG \"$SHELL_CMD\"$NL"
     TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG tiled$NL"
 done
