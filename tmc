@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2015 David Scholberg <recombinant.vector@gmail.com>
+#           2022 vincent Danjean <vincent.danjean@ens-lyon.org>
 
 # This file is part of tmux-cluster.
 #
@@ -16,6 +17,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with tmux-cluster.  If not, see <http://www.gnu.org/licenses/>.
+
+set -e
 
 # define newline var, per http://stackoverflow.com/a/9403076
 NL='
@@ -48,28 +51,117 @@ Options:
 EOF
 }
 
-# Add cluster hosts to global $HOSTS
-# param 1 should be cluster name
-add_cluster_hosts() {
-    local CLUSTER="$1"
+CONFDIR="$HOME/.clusterssh"
 
-    # check for cluster in config
-    local CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
-    if [ -z "$CLUSTER_LINE" ]; then
-        HOSTS="$HOSTS $CLUSTER"
-    else
-        SEEN_CLUSTERS="$SEEN_CLUSTERS $CLUSTER"
+declare -A CLUSTERS
+NB_CLUSTERS=0
 
-        # get hosts from cluster line
-        local CLUSTER_LINE_HOSTS="$(echo "$CLUSTER_LINE" | cut -f 2- -d ' ')"
+# get the cluster id (if existing)
+cluster-getid() {
+    local cname="$1" cid
+    cid="${CLUSTERS[$cname]}"
+    echo "$cid"
+}
 
-        for HOST in $CLUSTER_LINE_HOSTS; do
-            if [ -z "$(echo "$HOSTS" | grep -E " $HOST( |$)")" -a -z "$(echo "$SEEN_CLUSTERS" | grep -E " $HOST( |$)")" ]; then
-                add_cluster_hosts "$HOST"
+# define a cluster id if none already existing
+cluster-define() {
+    local cname="$1" cid cvar
+    cid="$(cluster-getid "$cname")"
+    if [ -z "$cid" ]; then
+        cid="$NB_CLUSTERS"
+        NB_CLUSTERS=$(($NB_CLUSTERS + 1))
+        CLUSTERS[$cname]="$cid"
+        cvar="$(cid-var "$cid")"
+        eval declare -a $cvar
+    fi
+}
+
+# get internal variable name for a given cluster id
+cid-var() {
+    local cid="$1"
+    echo "_CLUSTER_$cid"
+}
+
+# add host(s) to a cluster (defined by its id)
+cid-add() {
+    local cid="$1"
+    shift
+    local cvar="$(cid-var "$cid")"
+    eval $cvar'+=("$@")'
+}
+
+# get all hosts (space separated) of clusters (or direct hosts)
+# The result is a flatten hosts list (sub-clusters are recursed)
+cluster-get-hosts() {
+    local cid cvar
+    local -a cluster_or_hosts_to_add=( "$@" )
+    local -a hosts
+    local -A handled
+    while [ ${#cluster_or_hosts_to_add[@]} != 0 ]; do
+        local -a to_handle=( "${cluster_or_hosts_to_add[@]}" )
+        cluster_or_hosts_to_add=()
+        for host in "${to_handle[@]}"; do
+            if [ -n "${handled["$host"]}" ]; then
+                continue
+            fi
+            cid=$(cluster-getid "$host")
+            if [ -z "$cid" ]; then
+                hosts+=( "$host" )
+                handled["$host"]="$host"
+            else
+                cvar="$(cid-var "$cid")"
+                eval 'cluster_or_hosts_to_add+=( "${'"$cvar"'[@]}" )'
             fi
         done
-    fi
+    done
+    echo "${hosts[@]}"
+}
 
+# define a new cluster from a line
+# (i.e. 'clustername host1 host2 ...')
+cluster-define-from-line() {
+    local cname chosts cid
+    while read cname chosts; do
+        cluster-define "$cname"
+        cid=$(cluster-getid "$cname")
+        cid-add "$cid" $chosts
+    done < <(echo "$1")
+}
+
+# Read clusterssh config
+# Both 'clusters' and 'tags' files are taken into account
+# Clusters are put as key in the global CLUSTERS associative array.
+# The value is the cluster id that will be used to find the name of
+# the variable (array) that contains the hosts (or sub-clusters)
+read_cssh_config() {
+    local cname chosts cid
+    if [ -f "$CONFDIR/clusters" ]; then
+        while read cname chosts; do
+            cluster-define-from-line "$cname $chosts"
+        done < <(grep -E -v '^ *([#].*)?$' "$CONFDIR/clusters")
+    fi
+    local host cnames
+    if [ -f "$CONFDIR/tags" ]; then
+        while read host cnames; do
+            for cname in $cnames; do
+                cluster-define "$cname"
+                cid=$(cluster-getid "$cname")
+                cid-add "$cid" $host
+            done
+        done < <(grep -E -v '^ *([#].*)?$' "$CONFDIR/tags")
+    fi
+}
+
+# for debug, not used
+dump_config() {
+    local nb=0 cname cid cvar
+    echo "#clusters: $NB_CLUSTERS"
+    for cname in "${!CLUSTERS[@]}" ; do
+        cid="$(cluster-getid "$cname")"
+        echo "Cluster '$cname' (with id=$cid)"
+        cvar="$(cid-var "$cid")"
+        eval echo '"  ${'"$cvar"'[@]}"'
+    done
 }
 
 # get dimensions of current tmux window
@@ -141,20 +233,14 @@ if [ -n "$DUMP_HOSTS" -a -n "$DUMP_TMUX_CMDS" ]; then
     exit "$ERR_ARG"
 fi
 
-CONF="$HOME/.clusterssh/clusters"
-
-# check for conf file or custom cluster option
-if [ ! -f "$CONF" -a -z "$CUSTOM_CLUSTER_LINE" ]; then
-    echo "error: either config $CONF must exist or -c option must be used" 1>&2
+# check for conf directory or custom cluster option
+if [ ! -d "$CONFDIR" -a -z "$CUSTOM_CLUSTER_LINE" ]; then
+    echo "error: either config in $CONFDIR must exist or -c option must be used" 1>&2
     usage 1>&2
     exit "$ERR_ARG"
 fi
 
-CONF_LINES=""
-
-if [ -f "$CONF" ]; then
-    CONF_LINES="$(grep -Ev '(^#|^$)' "$CONF")"
-fi
+read_cssh_config
 
 if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
     # check for first param
@@ -168,14 +254,17 @@ if [ -n "$CUSTOM_CLUSTER_LINE" ]; then
     CLUSTER="$(echo "$CUSTOM_CLUSTER_LINE" | awk '{print $1}')"
 
     # check conf for existing cluster of the same name
-    if [ -n "$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")" ]; then
-        echo "error: cluster $CLUSTER specified with -c option exists in config $CONF" 1>&2
+    if [ -n "$(cluster-getid "$CLUSTER")" ]; then
+        echo "error: cluster $CLUSTER specified with -c option exists in config from $CONFDIR" 1>&2
         usage 1>&2
         exit "$ERR_ARG"
     fi
 
-    # add custom config line to configuration
-    CONF_LINES="${CONF_LINES}${NL}${CUSTOM_CLUSTER_LINE}${NL}"
+    # define the cluster from user parameter
+    cluster-define-from-line "$CUSTOM_CLUSTER_LINE"
+
+    # use this cluster
+    set -- "$CLUSTER"
 else
     # check for first param
     if [ -z "$1" ]; then
@@ -184,13 +273,6 @@ else
     fi
 
     CLUSTER="$1"
-fi
-
-# check for cluster in config
-CLUSTER_LINE="$(echo "$CONF_LINES" | grep -E "^$CLUSTER ")"
-if [ -z "$CLUSTER_LINE" ]; then
-    echo "error: cluster $CLUSTER not in config $CONF" 1>&2
-    exit "$ERR_ARG"
 fi
 
 SESSION_NAME=""
@@ -208,37 +290,38 @@ if [ -z "$USE_EXISTING_SESSION" ]; then
     fi
 fi
 
-# get hosts from cluster line
-HOSTS=""
-SEEN_CLUSTERS=""
-add_cluster_hosts $CLUSTER
+# get hosts from cluster
+declare -a ALL_HOSTS=( $(cluster-get-hosts "$@") )
+declare -A ALL_HOSTS2
+for HOST in "${ALL_HOSTS[@]}"; do
+    ALL_HOSTS2["$HOST"]="$HOST"
+done
 
-# exclude hosts
-# TODO: allow EXCLUDED_HOSTS to also contain cluster names
+# exclude hosts (or clusters)
 if [ -n "$EXCLUDED_HOSTS" ]; then
-    for HOST in $EXCLUDED_HOSTS; do
-        HOSTS="$(echo "$HOSTS" | sed -r "s/ $HOST( |$)/ /g")"
+    for HOST in $(cluster-get-hosts $EXCLUDED_HOSTS); do
+        unset ALL_HOSTS2["$HOST"]
     done
 fi
 
-# remove leading space
-HOSTS="$(echo "$HOSTS" | sed 's/^ //')"
+declare -a HOST
+for HOST in "${ALL_HOSTS[@]}"; do
+    if [ -n "${ALL_HOSTS2["$HOST"]}" ]; then
+        HOSTS+=("$HOST")
+    fi
+done
 
 # dump hosts
 if [ -n "$DUMP_HOSTS" ]; then
-    echo "$HOSTS"
+    echo "${HOSTS[@]}"
     exit
 fi
 
 # build tmux commands
 # get first host
-HOST="$(echo "$HOSTS" | awk '{print $1}')"
+HOST="${HOSTS[0]}"
 # remove first host
-if [ "$(echo "$HOSTS" | grep -o ' ' | wc -l)" -gt 0 ]; then
-    HOSTS="$(echo "$HOSTS" | cut -f 2- -d ' ')"
-else
-    HOSTS=""
-fi
+unset HOSTS[0]
 
 SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
 
@@ -262,7 +345,7 @@ else
     TMUX_CMDS="new -d $TMUX_WINDOW_XY_ARGS $TMUX_SESSION_S_ARG \"$SHELL_CMD\"$NL"
 fi
 
-for HOST in $HOSTS; do
+for HOST in "${HOSTS[@]}"; do
     SHELL_CMD="ssh $HOST; [ \$? -eq 255 ] && (echo Press ENTER to close pane; read enter)"
     TMUX_CMDS="${TMUX_CMDS}splitw $TMUX_SESSION_T_ARG \"$SHELL_CMD\"$NL"
     TMUX_CMDS="${TMUX_CMDS}select-layout $TMUX_SESSION_T_ARG tiled$NL"
